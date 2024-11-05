@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  mariadb:
+    image: mariadb:latest
+    container_name: my_mariadb
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password         # Root password
+      MYSQL_DATABASE: your_database_name         # Default database
+      MYSQL_USER: your_username                  # Non-root user
+      MYSQL_PASSWORD: your_password              # Non-root user password
+    ports:
+      - "3306:3306"                              # Expose MariaDB port
+    volumes:
+      - mariadb_data:/var/lib/mysql              # Persist data
+
+volumes:
+  mariadb_data:
