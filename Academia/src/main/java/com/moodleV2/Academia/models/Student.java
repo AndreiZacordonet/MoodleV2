@@ -8,6 +8,9 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Entity
 @Table(name = "studenti")
 @Setter
@@ -55,4 +58,10 @@ public class Student {
         this.anStudiu = anStudiu;
         this.grupa = grupa;
     }
+
+    @ManyToMany(fetch=FetchType.EAGER)
+    @JoinTable(name = "join_ds",
+            inverseJoinColumns = @JoinColumn(name = "discipline_id"),
+            joinColumns = @JoinColumn(name = "studenti_id"))
+    private Set<Disciplina> classes = new HashSet<>();
 }

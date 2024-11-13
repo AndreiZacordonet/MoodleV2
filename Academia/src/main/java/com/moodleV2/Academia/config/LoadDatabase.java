@@ -23,20 +23,29 @@ public class LoadDatabase {
 
         return args -> {
 
+            // teachers loading
             Profesor ciorbea =  new Profesor("Zaco", "Andrei", "andrei74c0@gmail.com", Grad.PROFESOR, Asociere.TITULAR, "afiliat suta la suta");
             Profesor vasilache = new Profesor("Misu", "Geamantan", "misussusus@gmail.com", Grad.CONFERENTIAR, Asociere.EXTERN, "afiliat 20 la suta");
-            // teachers loading
             log.info("Preloading " + profesorRepository.save(ciorbea));
             log.info("Preloading " + profesorRepository.save(vasilache));
 
-            // students loading
-            log.info("Preloading " + studentRepository.save(new Student("Picunigu", "Toader", "niguteo516@yahoo.com", Ciclu.LICENTA, 3, 10)));
-            log.info("Preloading " + studentRepository.save(new Student("Tudorel", "Toader", "suntunmicmic@yahoo.com", Ciclu.LICENTA, 1, 11)));
-            log.info("Preloading " + studentRepository.save(new Student("Zaharia", "Stefan", "alfaqteo615@yahoo.com", Ciclu.MASTER, 1, 7)));
-
             // courses loading
-            log.info("Preloading " + disciplinaRepository.save(new Disciplina("1234", ciorbea, "ADP", 4, TipDisciplina.IMPUSA, Categorie.ADIACENTA, TipExaminare.COLOCVIU)));
-            log.info("Preloading " + disciplinaRepository.save(new Disciplina("77777", ciorbea, "IA", 1, TipDisciplina.LIBER_ALEASA, Categorie.SPECIALITATE, TipExaminare.EXAMEN)));
+            Disciplina apd = new Disciplina("1234", ciorbea, "ADP", 4, TipDisciplina.IMPUSA, Categorie.ADIACENTA, TipExaminare.COLOCVIU);
+            Disciplina ia = new Disciplina("77777", ciorbea, "IA", 1, TipDisciplina.LIBER_ALEASA, Categorie.SPECIALITATE, TipExaminare.EXAMEN);
+            log.info("Preloading " + disciplinaRepository.save(apd));
+            log.info("Preloading " + disciplinaRepository.save(ia));
+
+            // students loading
+            Student picu = new Student("Picunigu", "Toader", "niguteo516@yahoo.com", Ciclu.LICENTA, 3, 10);
+            picu.getClasses().add(apd);
+            picu.getClasses().add(ia);
+            Student tudorel = new Student("Tudorel", "Toader", "suntunmicmic@yahoo.com", Ciclu.LICENTA, 1, 11);
+            Student zh = new Student("Zaharia", "Stefan", "alfaqteo615@yahoo.com", Ciclu.MASTER, 1, 7);
+            log.info("Preloading " + studentRepository.save(picu));
+            log.info("Preloading " + studentRepository.save(tudorel));
+            log.info("Preloading " + studentRepository.save(zh));
+            zh.getClasses().add(ia);
+            log.info("Add disciplines: " + studentRepository.save(zh));
         };
     }
 }
