@@ -1,0 +1,17 @@
+### GET all teachers
+GET http://localhost:8080/api/academia/profesori
+
+### GET teacher by id
+GET http://localhost:8080/api/academia/profesori/1
+
+### POST create new teacher
+POST http://localhost:8080/api/academia/profesori
+Content-Type: application/json
+
+{
+  "nume": "Alibaba",
+  "prenume": "Petrica",
+  "email": "ciocc@huray.com",
+  "gradDidactic": "ASISTENT",
+  "tipAsociere": "TITULAR"
+}
