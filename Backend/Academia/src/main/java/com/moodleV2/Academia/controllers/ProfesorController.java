@@ -1,8 +1,11 @@
 package com.moodleV2.Academia.controllers;
 
+import com.moodleV2.Academia.dto.ProfesorDto;
 import com.moodleV2.Academia.models.Profesor;
 import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
 import com.moodleV2.Academia.repositories.ProfesorRepository;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
@@ -16,6 +19,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
+@RequestMapping("/api/academia")
 public class ProfesorController {
 
     private final ProfesorRepository repository;
@@ -26,28 +30,30 @@ public class ProfesorController {
         this.assembler = assembler;
     }
 
-    @GetMapping("/api/academia/profesori")
-    public CollectionModel<EntityModel<Profesor>> getAll() {
-        List<EntityModel<Profesor>> profesori =
+    @GetMapping("/profesori")
+    public CollectionModel<EntityModel<ProfesorDto>> getAll() {
+        List<EntityModel<ProfesorDto>> profesori =
                 repository.findAll().stream()
                         .map(assembler::toModel)
-                        .collect(Collectors.toUnmodifiableList());
+                        .toList();
 
         return CollectionModel.of(profesori,
                 linkTo(methodOn(ProfesorController.class).getAll()).withSelfRel());
     }
 
-    @GetMapping("/api/academia/profesori/{id}")
-    public EntityModel<Profesor> getById(@PathVariable Long id) {
+    @GetMapping("/profesori/{id}")
+    public EntityModel<ProfesorDto> getById(@PathVariable Long id) {
         Profesor profesor = repository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
-
+//        ProfesorDto profesorDto = assembler.toModel(profesor).getContent();
+//        System.out.println(profesorDto.toString());
         return assembler.toModel(profesor);
     }
 
-    @PostMapping("/api/academia/profesori")
-    ResponseEntity<?> createNew(@RequestBody Profesor newProfesor) {
-        EntityModel<Profesor> profesorEntityModel = assembler.toModel(repository.save(newProfesor));
+    @Operation(summary = "Create a new Profesor", description = "Creates a new profesor using the provided DTO")
+    @PostMapping("/profesori")
+    ResponseEntity<?> createNew(@Valid @RequestBody ProfesorDto newProfesor) {
+        EntityModel<ProfesorDto> profesorEntityModel = assembler.toModel(repository.save(newProfesor.ProfesorMapper()));
 
         return ResponseEntity.created(profesorEntityModel.getRequiredLink(IanaLinkRelations.SELF)
                 .toUri()).body(profesorEntityModel);

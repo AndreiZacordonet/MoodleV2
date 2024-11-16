@@ -54,4 +54,10 @@ public class Profesor {
         this.afiliere = afiliere;
     }
 
+    @Override
+    public String toString() {
+        return "Profesor:{\nid=" + this.id + "\nnume=" + this.nume + "\nprenume=" + this.prenume + "\nemail=" + this.email
+                + "\ngrad=" +this.gradDidactic + "\nasociere=" + this.tipAsociere + "\nafiliere=" + this.afiliere + "\n}\n";
+    }
+
 }
