@@ -17,7 +17,7 @@ public class ProfesorExceptionHandler {
         Map<String, Object> body = Map.of(
                 "timestamp", LocalDateTime.now(),
                 "status", HttpStatus.NOT_FOUND.value(),
-                "error", "Not Found",
+                "error", "Profesor Not Found",
                 "message", ex.getMessage(),
                 "path", request.getRequestURI()
         );
