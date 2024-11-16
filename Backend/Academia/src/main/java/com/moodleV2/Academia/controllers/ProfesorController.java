@@ -17,11 +17,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -47,7 +49,7 @@ public class ProfesorController {
     @Parameter(name = "page", description = "Page number, starting at 0", example = "0")
     @Parameter(name = "size", description = "Number of items per page", example = "10")
     @Parameter(name = "sort", description = "Sort criteria, e.g., nume,asc", example = "nume,asc")
-    ResponseEntity<?> getAll(Pageable pageable) {
+    ResponseEntity<?> getAll(@Parameter Pageable pageable) {
         Page<Profesor> page = repository.findAll(pageable);
 
         List<EntityModel<ProfesorDto>> profesori =
@@ -67,22 +69,38 @@ public class ProfesorController {
         );
 
         if (page.hasPrevious()) {
-            Pageable previousPageable = PageRequest.of(
-                    pageable.getPageNumber() - 1,
-                    pageable.getPageSize(),
-                    pageable.getSort()
+            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable)).toUriComponentsBuilder()
+                    .queryParam("page",pageable.getPageNumber() - 1)
+                    .queryParam("size", pageable.getPageSize())
+                    .toUriString())
+                    .withRel("prev")
             );
-            pagedModel.add(linkTo(methodOn(ProfesorController.class).getAll(previousPageable)).withRel("prev"));
         }
 
         if (page.hasNext()) {
-            Pageable nextPageable = PageRequest.of(
-                    pageable.getPageNumber() + 1,
-                    pageable.getPageSize(),
-                    pageable.getSort()
+            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable)).toUriComponentsBuilder()
+                            .queryParam("page",pageable.getPageNumber() + 1)
+                            .queryParam("size", pageable.getPageSize())
+                            .toUriString())
+                    .withRel("next")
             );
-            pagedModel.add(linkTo(methodOn(ProfesorController.class).getAll(nextPageable)).withRel("next"));
         }
+
+        // adding first page link
+        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable)).toUriComponentsBuilder()
+                                .queryParam("page",0)
+                                .queryParam("size", pageable.getPageSize())
+                                .toUriString())
+                        .withRel("first")
+        );
+
+        // adding last page link
+        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable)).toUriComponentsBuilder()
+                        .queryParam("page",page.getTotalPages() - 1)
+                        .queryParam("size", pageable.getPageSize())
+                        .toUriString())
+                .withRel("last")
+        );
 
         return ResponseEntity.ok(pagedModel);
     }
