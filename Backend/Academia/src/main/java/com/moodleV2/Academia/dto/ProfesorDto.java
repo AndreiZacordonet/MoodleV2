@@ -29,13 +29,15 @@ public class ProfesorDto {
     @Email
     private String email;
 
-    @Schema(description = "Grad Profesor", example = "ASISTENT", required = true,
-            allowableValues = {"ASISTENT", "SEF_LUCRARI", "CONFERENTIAR", "PROFESOR"})
+    @Schema(description = "Grad Profesor", example = "ASISTENT", required = true
+//            allowableValues = {"ASISTENT", "SEF_LUCRARI", "CONFERENTIAR", "PROFESOR"}
+    )
     @NonNull
     private Grad gradDidactic;
 
-    @Schema(description = "Asociere Profesor", example = "TITULAR", required = true,
-            allowableValues = {"TITULAR", "ASOCIAT", "EXTERN"})
+    @Schema(description = "Asociere Profesor", example = "TITULAR", required = true
+//            allowableValues = {"TITULAR", "ASOCIAT", "EXTERN"}
+    )
     @NonNull
     private Asociere tipAsociere;
 

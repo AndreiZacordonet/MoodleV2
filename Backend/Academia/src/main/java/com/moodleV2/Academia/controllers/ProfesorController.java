@@ -63,7 +63,7 @@ public class ProfesorController {
 
         // verificare dimeniuni paginare
         // TODO: add PROFESOR_MAX_COUNT and PROFESOR_MAX_PAGE_SIZE constants in application properties
-        if (pageable.getPageNumber() < 0 || pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
+        if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
             // default values for page and size (0, 20) override any errors like assigning a string or a negative number
             throw new LengthPaginationException();
         }
