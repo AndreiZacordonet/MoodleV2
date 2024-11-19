@@ -1,8 +1,8 @@
 ### GET all teachers
-GET http://localhost:8080/api/academia/profesori
+GET http://localhost:8080/api/academia/profesori?page=100&size=10&sort=albdulah
 
 ### GET teacher by id
-GET http://localhost:8080/api/academia/profesori/1
+GET http://localhost:8080/api/academia/profesori/10
 
 ### POST create new teacher
 POST http://localhost:8080/api/academia/profesori

@@ -6,6 +6,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class AcademiaDefinitionOpenapi {
 
-//    @GetMapping("/api/academia")
+//    @GetMapping("/api/academia")      // http://localhost:8080/v3/api-docs
 
 }
