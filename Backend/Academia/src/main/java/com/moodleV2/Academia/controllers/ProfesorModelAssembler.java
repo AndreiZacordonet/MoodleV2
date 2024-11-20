@@ -26,6 +26,6 @@ public class ProfesorModelAssembler implements RepresentationModelAssembler<Prof
 //        System.out.println(profesorDto.toString());
         return EntityModel.of(profesorDto,
                 linkTo(methodOn(ProfesorController.class).getById(profesor.getId())).withSelfRel().withType("GET"),
-                linkTo(methodOn(ProfesorController.class).getAll(PageRequest.of(0, 10))).withRel("profesori").withType("GET"));
+                linkTo(methodOn(ProfesorController.class).getAll(PageRequest.of(0, 10), null, null, null, null, null)).withRel("profesori").withType("GET"));
     }
 }

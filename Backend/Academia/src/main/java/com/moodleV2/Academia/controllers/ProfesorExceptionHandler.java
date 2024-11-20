@@ -2,6 +2,7 @@ package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
 import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
+import com.moodleV2.Academia.exceptions.SearchParamException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.Link;
@@ -25,7 +26,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class ProfesorExceptionHandler {
 
     private RepresentationModel<?> links = new RepresentationModel<>()
-            .add(linkTo(methodOn(ProfesorController.class).getAll(PageRequest.of(0, 10)))
+            .add(linkTo(methodOn(ProfesorController.class).getAll(PageRequest.of(0, 10), null, null, null, null, null))
                     .withRel("profesori"));
 //        links.add(linkTo(methodOn(ProfesorController.class).getAll(PageRequest.of(0, 10))).withRel("profesori"));
 
@@ -69,6 +70,21 @@ public class ProfesorExceptionHandler {
         body.put("message", ex.getMessage());
         body.put("path", request.getQueryString() == null ? request.getRequestURI() : request.getRequestURI() + "?" +
                         request.getQueryString());
+        body.put("_links", links.getLinks());
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
+    }
+
+    @ExceptionHandler(SearchParamException.class)
+    public ResponseEntity<?> handleSearchParamException(SearchParamException ex, HttpServletRequest request) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.UNPROCESSABLE_ENTITY.value());
+        body.put("error", "Unprocessable Entity");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getQueryString() == null ? request.getRequestURI() : request.getRequestURI() + "?" +
+                request.getQueryString());
         body.put("_links", links.getLinks());
 
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);

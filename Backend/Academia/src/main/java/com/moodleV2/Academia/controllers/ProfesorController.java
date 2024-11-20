@@ -3,8 +3,11 @@ package com.moodleV2.Academia.controllers;
 import com.moodleV2.Academia.dto.ProfesorDto;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
 import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
+import com.moodleV2.Academia.models.Asociere;
+import com.moodleV2.Academia.models.Grad;
 import com.moodleV2.Academia.models.Profesor;
 import com.moodleV2.Academia.repositories.ProfesorRepository;
+import com.moodleV2.Academia.service.ProfesorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
@@ -42,10 +46,12 @@ public class ProfesorController {
 
     private final ProfesorRepository repository;
     private final ProfesorModelAssembler assembler;
+    private final ProfesorService service;
 
-    public ProfesorController(ProfesorRepository repository, ProfesorModelAssembler assembler, ValidationAutoConfiguration validationAutoConfiguration) {
+    public ProfesorController(ProfesorRepository repository, ProfesorModelAssembler assembler, ValidationAutoConfiguration validationAutoConfiguration, ProfesorService service) {
         this.repository = repository;
         this.assembler = assembler;
+        this.service = service;
     }
 
     @GetMapping("/profesori")
@@ -59,7 +65,12 @@ public class ProfesorController {
     @Parameter(name = "page", description = "Page number, starting at 0", example = "0")
     @Parameter(name = "size", description = "Number of items per page", example = "10")
     @Parameter(name = "sort", description = "Sort criteria: nume, prenume, email, gradDidactic, tipAsociere, asc, desc", example = "nume,asc")
-    ResponseEntity<?> getAll(Pageable pageable) {    // TODO: verificare parametri de paginare
+    ResponseEntity<?> getAll(Pageable pageable,
+                             @RequestParam(name = "nume", required = false) String nume,
+                             @RequestParam(name = "prenume", required = false) String prenume,
+                             @RequestParam(name = "email", required = false) String email,
+                             @RequestParam(name = "grad", required = false) Grad grad,
+                             @RequestParam(name = "asociare", required = false) Asociere asociere) {    // DONE: verificare parametri de paginare
 
         // verificare dimeniuni paginare
         // TODO: add PROFESOR_MAX_COUNT and PROFESOR_MAX_PAGE_SIZE constants in application properties
@@ -70,7 +81,7 @@ public class ProfesorController {
 
         // PropertyReferenceException is thrown when sorting cannot be done by the specified parameter
         // 422 Unprocessable Content?
-        Page<Profesor> page = repository.findAll(pageable);
+        Page<Profesor> page = service.ProfesorSearch(pageable, nume, prenume, email, grad, asociere);
 
         List<EntityModel<ProfesorDto>> profesori =
                 page.getContent().stream()
@@ -85,11 +96,11 @@ public class ProfesorController {
                         page.getTotalElements(),
                         page.getTotalPages()
                 ),
-                linkTo(methodOn(ProfesorController.class).getAll(pageable)).withSelfRel()
+                linkTo(methodOn(ProfesorController.class).getAll(pageable, null, null, null, null, null)).withSelfRel()
         );
 
         if (page.hasPrevious()) {
-            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable)).toUriComponentsBuilder()
+            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, null, null, null, null, null)).toUriComponentsBuilder()
                     .queryParam("page",pageable.getPageNumber() - 1)
                     .queryParam("size", pageable.getPageSize())
                     .toUriString())
@@ -98,7 +109,7 @@ public class ProfesorController {
         }
 
         if (page.hasNext()) {
-            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable)).toUriComponentsBuilder()
+            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, null, null, null, null, null)).toUriComponentsBuilder()
                             .queryParam("page",pageable.getPageNumber() + 1)
                             .queryParam("size", pageable.getPageSize())
                             .toUriString())
@@ -107,7 +118,7 @@ public class ProfesorController {
         }
 
         // adding first page link
-        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable)).toUriComponentsBuilder()
+        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, null, null, null, null, null)).toUriComponentsBuilder()
                                 .queryParam("page",0)
                                 .queryParam("size", pageable.getPageSize())
                                 .toUriString())
@@ -115,7 +126,7 @@ public class ProfesorController {
         );
 
         // adding last page link
-        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable)).toUriComponentsBuilder()
+        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, null, null, null, null, null)).toUriComponentsBuilder()
                         .queryParam("page",page.getTotalPages() - 1)
                         .queryParam("size", pageable.getPageSize())
                         .toUriString())
@@ -132,6 +143,10 @@ public class ProfesorController {
             @ApiResponse(responseCode = "404", description = "Profesor not found")
     })
     ResponseEntity<?> getById(@PathVariable Long id) {
+
+//        if (id > 1000) {
+//            throw new
+//        }
 
         Profesor profesor = repository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));

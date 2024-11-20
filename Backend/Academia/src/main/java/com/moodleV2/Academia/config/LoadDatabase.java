@@ -25,9 +25,15 @@ public class LoadDatabase {
 
             // teachers loading
             Profesor ciorbea =  new Profesor("Zaco", "Andrei", "andrei74c0@gmail.com", Grad.PROFESOR, Asociere.TITULAR, "afiliat suta la suta");
-            Profesor vasilache = new Profesor("Misu", "Geamantan", "misussusus@gmail.com", Grad.CONFERENTIAR, Asociere.EXTERN, "afiliat 20 la suta");
+            Profesor vasilache = new Profesor("Misu", "Andrei", "misussusus@gmail.com", Grad.CONFERENTIAR, Asociere.EXTERN, "afiliat 20 la suta");
+            Profesor misu = new Profesor("Vasile", "Geamantan", "Vasile@gmail.com", Grad.SEF_LUCRARI, Asociere.EXTERN, "afiliat 10 la suta");
+            Profesor barbotea = new Profesor("Barbotea", "Geamantan", "barbotea@gmail.com", Grad.SEF_LUCRARI, Asociere.ASOCIAT, "afiliat 1 la suta");
+            Profesor guzgan = new Profesor("Guzgan", "Geamantan", "guzgan@gmail.com", Grad.SEF_LUCRARI, Asociere.ASOCIAT, "afiliat 1 la suta");
             log.info("Preloading " + profesorRepository.save(ciorbea));
             log.info("Preloading " + profesorRepository.save(vasilache));
+            log.info("Preloading " + profesorRepository.save(misu));
+            log.info("Preloading " + profesorRepository.save(barbotea));
+            log.info("Preloading " + profesorRepository.save(guzgan));
 
             // courses loading
             Disciplina apd = new Disciplina("1234", ciorbea, "ADP", 4, TipDisciplina.IMPUSA, Categorie.ADIACENTA, TipExaminare.COLOCVIU);
