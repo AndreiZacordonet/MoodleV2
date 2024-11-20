@@ -1,5 +1,8 @@
 package com.moodleV2.Academia.service;
 
+import com.moodleV2.Academia.controllers.ProfesorModelAssembler;
+import com.moodleV2.Academia.dto.ProfesorDto;
+import com.moodleV2.Academia.exceptions.InvalidFieldException;
 import com.moodleV2.Academia.exceptions.SearchParamException;
 import com.moodleV2.Academia.models.Asociere;
 import com.moodleV2.Academia.models.Grad;
@@ -9,17 +12,19 @@ import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Service;
 
-import javax.xml.validation.Validator;
 
 @Service
 public class ProfesorService {
 
     private final ProfesorRepository profesorRepository;
+    private final ProfesorModelAssembler assembler;
 
-    public ProfesorService(ProfesorRepository profesorRepository) {
+    public ProfesorService(ProfesorRepository profesorRepository, ProfesorModelAssembler assembler) {
         this.profesorRepository = profesorRepository;
+        this.assembler = assembler;
     }
 
     public Page<Profesor> ProfesorSearch(Pageable pageable,
@@ -68,5 +73,26 @@ public class ProfesorService {
     public static Specification<Profesor> asociareEquals(Asociere asociere) {
         return (root, query, criteriaBuilder) ->
                 asociere == null ? null : criteriaBuilder.equal(root.get("tipAsociere"), asociere);
+    }
+
+    public EntityModel<ProfesorDto> AddProfesor(ProfesorDto profesorDto) {
+
+        String nume = profesorDto.getNume();
+        String prenume = profesorDto.getPrenume();
+        String email = profesorDto.getEmail();
+
+        if (nume.length() > 50 || nume.length() < 2) {
+            throw new InvalidFieldException("Numele este invalid");
+        }
+        if (prenume.length() > 50 || prenume.length() < 2) {
+            throw new InvalidFieldException("Prenumele este invalid");
+        }
+        EmailValidator emailValidator = new EmailValidator();
+        if (email.length() > 50 || !emailValidator.isValid(email, null)
+                || profesorRepository.existsProfesorByEmail(email)) {
+            throw new InvalidFieldException("Emailul este invalid");
+        }
+
+        return assembler.toModel(profesorRepository.save(profesorDto.ProfesorMapper()));
     }
 }

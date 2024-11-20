@@ -10,5 +10,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface ProfesorRepository extends JpaRepository<Profesor, Long>, JpaSpecificationExecutor<Profesor> {
-//    Page<Profesor> findAll(Pageable pageable, Specification<Profesor> spec);
+    boolean existsProfesorByEmail(String email);
 }

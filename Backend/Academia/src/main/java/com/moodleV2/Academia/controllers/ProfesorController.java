@@ -159,11 +159,14 @@ public class ProfesorController {
     @PostMapping("/profesori")
     @Operation(summary = "Create a new Profesor", description = "Creates a new profesor using the provided DTO")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Professor created successfully", content = @Content(schema = @Schema(implementation = ProfesorDto.class)))
+            @ApiResponse(responseCode = "201", description = "Professor created successfully", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
+            @ApiResponse(responseCode = "422", description = "Profesor data is invalid")
     })
     ResponseEntity<?> createNew(@Valid @RequestBody ProfesorDto newProfesor) {
+        // DONE: profesor data validation
+        // DONE: check if profesor already exists (check email)
 
-        EntityModel<ProfesorDto> profesorEntityModel = assembler.toModel(repository.save(newProfesor.ProfesorMapper()));
+        EntityModel<ProfesorDto> profesorEntityModel = service.AddProfesor(newProfesor);
 
         return ResponseEntity.created(profesorEntityModel.getRequiredLink(IanaLinkRelations.SELF)
                 .toUri()).body(profesorEntityModel);

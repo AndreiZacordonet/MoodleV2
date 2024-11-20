@@ -1,5 +1,6 @@
 package com.moodleV2.Academia.controllers;
 
+import com.moodleV2.Academia.exceptions.InvalidFieldException;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
 import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
 import com.moodleV2.Academia.exceptions.SearchParamException;
@@ -9,11 +10,13 @@ import org.springframework.hateoas.Link;
 import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.data.mapping.PropertyReferenceException;
 
+import javax.naming.InvalidNameException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -25,9 +28,11 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @ControllerAdvice
 public class ProfesorExceptionHandler {
 
+    // TODO: add link to api documentation
     private RepresentationModel<?> links = new RepresentationModel<>()
             .add(linkTo(methodOn(ProfesorController.class).getAll(PageRequest.of(0, 10), null, null, null, null, null))
-                    .withRel("profesori"));
+                    .withRel("profesori"))
+            .add(Link.of("/v3/api-docs").withRel("api-docs").withTitle("API Documentation"));
 //        links.add(linkTo(methodOn(ProfesorController.class).getAll(PageRequest.of(0, 10))).withRel("profesori"));
 
     @ExceptionHandler(ProfesorNotFoundException.class)
@@ -103,5 +108,35 @@ public class ProfesorExceptionHandler {
         body.put("_links", links.getLinks());
 
         return ResponseEntity.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE).body(body);
+    }
+
+    @ExceptionHandler(InvalidFieldException.class)
+    public ResponseEntity<?> handleInvalidFieldException(InvalidFieldException ex, HttpServletRequest request) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.UNPROCESSABLE_ENTITY.value());
+        body.put("error", "Unprocessable Entity");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getQueryString() == null ? request.getRequestURI() : request.getRequestURI() + "?" +
+                request.getQueryString());
+        body.put("_links", links.getLinks());
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)    // for the parsing errors from enums (should this be 406 Not Acceptable?)
+    public ResponseEntity<?> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex, HttpServletRequest request) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.UNPROCESSABLE_ENTITY.value());
+        body.put("error", "Unprocessable Entity");
+        body.put("message", "Enum value un recognized. Check api documentation");
+        body.put("path", request.getQueryString() == null ? request.getRequestURI() : request.getRequestURI() + "?" +
+                request.getQueryString());
+        body.put("_links", links.getLinks());
+
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
     }
 }
