@@ -172,4 +172,50 @@ public class ProfesorController {
                 .toUri()).body(profesorEntityModel);
     }
 
+    @DeleteMapping("/profesori/{id}")
+    @Operation(summary = "Delete one professor", description = "Delete one professor by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully deleted"),
+            @ApiResponse(responseCode = "404", description = "Profesor not found"),
+            @ApiResponse(responseCode = "416", description = "Invalid identifier")
+    })
+    ResponseEntity<?> deleteById(@PathVariable Long id) {
+        // TODO: delete teachers discipline first discipline if any
+
+        if (id > 1000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Profesor profesor = repository.findById(id)
+                .orElseThrow(() -> new ProfesorNotFoundException(id));
+
+        repository.delete(profesor);
+
+        // is this response enough?
+        return ResponseEntity.ok().body(Map.of(
+                "message", "Profesor deleted successfully",
+                "id", id
+        ));
+    }
+
+    @PatchMapping("/profesori/{id}")
+    @Operation(summary = "Update a professor", description = "Updates one or more fields of a professor")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
+            @ApiResponse(responseCode = "404", description = "Profesor not found"),
+            @ApiResponse(responseCode = "416", description = "Invalid identifier"),
+            @ApiResponse(responseCode = "422", description = "Profesor data is invalid")
+    })
+    ResponseEntity<?> partialUpdate(@PathVariable Long id, @RequestBody Map<String, String> fields) {
+
+        if (id > 1000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Profesor profesor = service.PartialUpdateProfesor(id, fields);
+
+        // should return CREATED ?
+        return ResponseEntity.ok(assembler.toModel(profesor));
+    }
+
 }

@@ -132,7 +132,7 @@ public class ProfesorExceptionHandler {
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.UNPROCESSABLE_ENTITY.value());
         body.put("error", "Unprocessable Entity");
-        body.put("message", "Enum value un recognized. Check api documentation");
+        body.put("message", "Request is not in a proper format. Check api documentation");
         body.put("path", request.getQueryString() == null ? request.getRequestURI() : request.getRequestURI() + "?" +
                 request.getQueryString());
         body.put("_links", links.getLinks());
