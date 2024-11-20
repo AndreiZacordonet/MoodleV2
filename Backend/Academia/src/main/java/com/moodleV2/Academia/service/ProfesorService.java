@@ -11,15 +11,15 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import javax.xml.validation.Validator;
+
 @Service
 public class ProfesorService {
 
     private final ProfesorRepository profesorRepository;
-    private final EmailValidator emailValidator;
 
-    public ProfesorService(ProfesorRepository profesorRepository, EmailValidator emailValidator) {
+    public ProfesorService(ProfesorRepository profesorRepository) {
         this.profesorRepository = profesorRepository;
-        this.emailValidator = emailValidator;
     }
 
     public Page<Profesor> ProfesorSearch(Pageable pageable,
@@ -31,6 +31,7 @@ public class ProfesorService {
         if (prenume != null && prenume.length() > 50) {
             throw new SearchParamException(prenume);
         }
+        EmailValidator emailValidator = new EmailValidator();
         if (email != null && (email.length() > 50 || !emailValidator.isValid(email, null))) {
             throw new SearchParamException(email);
         }
