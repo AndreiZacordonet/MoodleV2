@@ -66,6 +66,7 @@ public class ProfesorController {
     @Parameter(name = "size", description = "Number of items per page", example = "10")
     @Parameter(name = "sort", description = "Sort criteria: nume, prenume, email, gradDidactic, tipAsociere, asc, desc", example = "nume,asc")
     ResponseEntity<?> getAll(Pageable pageable,
+                             // TODO: de adaugat parametrul disciplina (probabil numele disciplinei)
                              @RequestParam(name = "nume", required = false) String nume,
                              @RequestParam(name = "prenume", required = false) String prenume,
                              @RequestParam(name = "email", required = false) String email,
@@ -140,13 +141,14 @@ public class ProfesorController {
     @Operation(summary = "Retrive one professor", description = "Retrive one professor by its id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
-            @ApiResponse(responseCode = "404", description = "Profesor not found")
+            @ApiResponse(responseCode = "404", description = "Profesor not found"),
+            @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
     ResponseEntity<?> getById(@PathVariable Long id) {
 
-//        if (id > 1000) {
-//            throw new
-//        }
+        if (id > 1000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
 
         Profesor profesor = repository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));

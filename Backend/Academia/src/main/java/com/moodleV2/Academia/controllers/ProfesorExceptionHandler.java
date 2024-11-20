@@ -89,4 +89,19 @@ public class ProfesorExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
     }
+
+    @ExceptionHandler(IndexOutOfBoundsException.class)
+    public ResponseEntity<?> handleIndexOutOfBoundsException(IndexOutOfBoundsException ex, HttpServletRequest request) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE.value());
+        body.put("error", "Request Range Not Satisfiable");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getQueryString() == null ? request.getRequestURI() : request.getRequestURI() + "?" +
+                request.getQueryString());
+        body.put("_links", links.getLinks());
+
+        return ResponseEntity.status(HttpStatus.REQUESTED_RANGE_NOT_SATISFIABLE).body(body);
+    }
 }
