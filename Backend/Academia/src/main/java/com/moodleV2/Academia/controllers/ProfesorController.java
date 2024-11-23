@@ -67,10 +67,19 @@ public class ProfesorController {
     @Parameter(name = "sort", description = "Sort criteria: nume, prenume, email, gradDidactic, tipAsociere, asc, desc", example = "nume,asc")
     ResponseEntity<?> getAll(Pageable pageable,
                              // TODO: de adaugat parametrul disciplina (probabil numele disciplinei)
+                             @Parameter(name = "nume", description = "Filter by professor's last name (partial match allowed). Case-insensitive.", example = "Popescu")
                              @RequestParam(name = "nume", required = false) String nume,
+
+                             @Parameter(name = "prenume", description = "Filter by professor's first name (partial match allowed). Case-insensitive.", example = "Ion")
                              @RequestParam(name = "prenume", required = false) String prenume,
+
+                             @Parameter(name = "email", description = "Filter by professor's email address. Must be a valid email format.", example = "ion.popescu@example.com")
                              @RequestParam(name = "email", required = false) String email,
+
+                             @Parameter(name = "grad", description = "Filter by professor's academic rank. Allowed values: ASSISTANT, LECTURER, PROFESSOR", schema = @Schema(implementation = Grad.class))
                              @RequestParam(name = "grad", required = false) Grad grad,
+
+                             @Parameter(name = "asociare", description = "Filter by professor's type of association. Allowed values: FULL_TIME, PART_TIME, VISITING", schema = @Schema(implementation = Asociere.class))
                              @RequestParam(name = "asociare", required = false) Asociere asociere) {    // DONE: verificare parametri de paginare
 
         // verificare dimeniuni paginare
@@ -97,11 +106,15 @@ public class ProfesorController {
                         page.getTotalElements(),
                         page.getTotalPages()
                 ),
-                linkTo(methodOn(ProfesorController.class).getAll(pageable, null, null, null, null, null)).withSelfRel()
+                Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, nume, prenume, email, grad, asociere)).toUriComponentsBuilder()
+                                .queryParam("page", page.getNumber())
+                                .queryParam("size", page.getSize())
+                                .toUriString())
+                        .withSelfRel()
         );
 
         if (page.hasPrevious()) {
-            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, null, null, null, null, null)).toUriComponentsBuilder()
+            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, nume, prenume, email, grad, asociere)).toUriComponentsBuilder()
                     .queryParam("page",pageable.getPageNumber() - 1)
                     .queryParam("size", pageable.getPageSize())
                     .toUriString())
@@ -110,7 +123,7 @@ public class ProfesorController {
         }
 
         if (page.hasNext()) {
-            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, null, null, null, null, null)).toUriComponentsBuilder()
+            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, nume, prenume, email, grad, asociere)).toUriComponentsBuilder()
                             .queryParam("page",pageable.getPageNumber() + 1)
                             .queryParam("size", pageable.getPageSize())
                             .toUriString())
@@ -119,7 +132,7 @@ public class ProfesorController {
         }
 
         // adding first page link
-        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, null, null, null, null, null)).toUriComponentsBuilder()
+        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, nume, prenume, email, grad, asociere)).toUriComponentsBuilder()
                                 .queryParam("page",0)
                                 .queryParam("size", pageable.getPageSize())
                                 .toUriString())
@@ -127,7 +140,7 @@ public class ProfesorController {
         );
 
         // adding last page link
-        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, null, null, null, null, null)).toUriComponentsBuilder()
+        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getAll(pageable, nume, prenume, email, grad, asociere)).toUriComponentsBuilder()
                         .queryParam("page",page.getTotalPages() - 1)
                         .queryParam("size", pageable.getPageSize())
                         .toUriString())
@@ -190,12 +203,8 @@ public class ProfesorController {
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
 
         repository.delete(profesor);
-
-        // is this response enough?
-        return ResponseEntity.ok().body(Map.of(
-                "message", "Profesor deleted successfully",
-                "id", id
-        ));
+        
+        return ResponseEntity.ok(assembler.toModel(profesor));
     }
 
     @PatchMapping("/profesori/{id}")
@@ -214,7 +223,6 @@ public class ProfesorController {
 
         Profesor profesor = service.PartialUpdateProfesor(id, fields);
 
-        // should return CREATED ?
         return ResponseEntity.ok(assembler.toModel(profesor));
     }
 
