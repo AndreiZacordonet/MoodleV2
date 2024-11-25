@@ -17,16 +17,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,10 +30,6 @@ import java.util.Map;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
-
-
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.PageRequest;
 
 @RestController
 @RequestMapping("/api/academia")
@@ -203,7 +195,7 @@ public class ProfesorController {
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
 
         repository.delete(profesor);
-        
+
         return ResponseEntity.ok(assembler.toModel(profesor));
     }
 
@@ -215,6 +207,21 @@ public class ProfesorController {
             @ApiResponse(responseCode = "416", description = "Invalid identifier"),
             @ApiResponse(responseCode = "422", description = "Profesor data is invalid")
     })
+    @Parameter(name = "id", description = "Professor ID to be updated", example = "123")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Fields to be updated. Only the provided fields will be modified.",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(example = """
+                        {
+                          "nume": "Updated Nume",
+                          "prenume": "Updated Prenume",
+                          "email": "updated.email@example.com",
+                          "gradDidactic": "PROFESOR",
+                          "tipAsociere": "TITULAR",
+                          "afiliere": "Updated Afiliere"
+                        }
+                        """)
+            ))
     ResponseEntity<?> partialUpdate(@PathVariable Long id, @RequestBody Map<String, String> fields) {
 
         if (id > 1000 || id < 0) {
