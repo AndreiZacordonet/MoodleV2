@@ -1,11 +1,15 @@
 package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.ProfesorDto;
+import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
+import com.moodleV2.Academia.exceptions.ProfesorAlreadyArchivedException;
 import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
 import com.moodleV2.Academia.models.Asociere;
+import com.moodleV2.Academia.models.Disciplina;
 import com.moodleV2.Academia.models.Grad;
 import com.moodleV2.Academia.models.Profesor;
+import com.moodleV2.Academia.repositories.DisciplinaRepository;
 import com.moodleV2.Academia.repositories.ProfesorRepository;
 import com.moodleV2.Academia.service.ProfesorService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,11 +43,13 @@ public class ProfesorController {
     private final ProfesorRepository repository;
     private final ProfesorModelAssembler assembler;
     private final ProfesorService service;
+    private final DisciplinaRepository disciplinaRepository;
 
-    public ProfesorController(ProfesorRepository repository, ProfesorModelAssembler assembler, ValidationAutoConfiguration validationAutoConfiguration, ProfesorService service) {
+    public ProfesorController(ProfesorRepository repository, ProfesorModelAssembler assembler, ValidationAutoConfiguration validationAutoConfiguration, ProfesorService service, DisciplinaRepository disciplinaRepository) {
         this.repository = repository;
         this.assembler = assembler;
         this.service = service;
+        this.disciplinaRepository = disciplinaRepository;
     }
 
     @GetMapping("/profesori")
@@ -158,6 +164,11 @@ public class ProfesorController {
         Profesor profesor = repository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
 
+        // daca profesorul este arhivat acesta nu va fi returnat
+        if (profesor.isArhivat()) {
+            throw new ProfesorNotFoundException(id);
+        }
+
         return ResponseEntity.ok(assembler.toModel(profesor));
     }
 
@@ -177,6 +188,12 @@ public class ProfesorController {
                 .toUri()).body(profesorEntityModel);
     }
 
+    /**
+     * Arhives a teacher by it's Id.
+     * If the teacher is already archived throws an error
+     * @param id
+     * @return Profesor DTO
+     */
     @DeleteMapping("/profesori/{id}")
     @Operation(summary = "Delete one professor", description = "Delete one professor by its id")
     @ApiResponses(value = {
@@ -184,8 +201,10 @@ public class ProfesorController {
             @ApiResponse(responseCode = "404", description = "Profesor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
+    @Parameter(name = "id", description = "Professor ID to be deleted", example = "123")
     ResponseEntity<?> deleteById(@PathVariable Long id) {
         // TODO: delete teachers discipline first discipline if any
+        // DONE: archive flag
 
         if (id > 1000 || id < 0) {
             throw new IndexOutOfBoundsException();
@@ -194,7 +213,13 @@ public class ProfesorController {
         Profesor profesor = repository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
 
-        repository.delete(profesor);
+        // daca profesorul este arhivat acesta nu va fi returnat
+        if (profesor.isArhivat()) {
+            throw new ProfesorAlreadyArchivedException("Professor with id " + id + " is already archived");
+        }
+
+        profesor.setArhivat(true);
+        repository.save(profesor);
 
         return ResponseEntity.ok(assembler.toModel(profesor));
     }
@@ -233,4 +258,9 @@ public class ProfesorController {
         return ResponseEntity.ok(assembler.toModel(profesor));
     }
 
+
+    //TODO: add getArchivedProfesori
+    /**
+     * Only admins can use this route
+     */
 }

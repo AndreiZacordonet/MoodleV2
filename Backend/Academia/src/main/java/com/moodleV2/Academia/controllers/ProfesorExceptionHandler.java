@@ -1,9 +1,6 @@
 package com.moodleV2.Academia.controllers;
 
-import com.moodleV2.Academia.exceptions.InvalidFieldException;
-import com.moodleV2.Academia.exceptions.LengthPaginationException;
-import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
-import com.moodleV2.Academia.exceptions.SearchParamException;
+import com.moodleV2.Academia.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.hateoas.Link;
@@ -138,5 +135,20 @@ public class ProfesorExceptionHandler {
         body.put("_links", links.getLinks());
 
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
+    }
+
+    @ExceptionHandler(ProfesorAlreadyArchivedException.class)
+    public ResponseEntity<?> handleProfesorAlreadyArchivedException(ProfesorAlreadyArchivedException ex, HttpServletRequest request) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+        body.put("message", ex.getMessage());
+        body.put("path", request.getQueryString() == null ? request.getRequestURI() : request.getRequestURI() + "?" +
+                request.getQueryString());
+        body.put("_links", links.getLinks());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 }

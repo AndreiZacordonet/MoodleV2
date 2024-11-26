@@ -50,6 +50,7 @@ public class ProfesorService {
                         .and(emailContains(email))
                         .and(gradEquals(grad))
                         .and(asociareEquals(asociere))
+                        .and(arhivareEquals(false))
         ), pageable);
     }
 
@@ -76,6 +77,11 @@ public class ProfesorService {
     public static Specification<Profesor> asociareEquals(Asociere asociere) {
         return (root, query, criteriaBuilder) ->
                 asociere == null ? null : criteriaBuilder.equal(root.get("tipAsociere"), asociere);
+    }
+
+    // pentru selectarea profesorilor arhivati
+    public static Specification<Profesor> arhivareEquals(boolean arhivat) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("arhivat"), arhivat);
     }
 
     public EntityModel<ProfesorDto> AddProfesor(ProfesorDto profesorDto) {
@@ -107,6 +113,11 @@ public class ProfesorService {
 
         Profesor profesor = profesorRepository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
+
+        // daca profesorul este arhivat acesta nu va fi returnat
+        if (profesor.isArhivat()) {
+            throw new ProfesorNotFoundException(id);
+        }
 
         fields.forEach((fieldName, value) -> {
             switch (fieldName) {

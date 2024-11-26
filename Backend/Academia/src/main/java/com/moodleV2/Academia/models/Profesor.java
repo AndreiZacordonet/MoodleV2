@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import jdk.jfr.BooleanFlag;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -43,6 +44,10 @@ public class Profesor {
     @Size(max = 50)
     private String afiliere;
 
+    @Column(name = "arhivat")
+    @BooleanFlag
+    private boolean arhivat;
+
     public Profesor() {}
 
     public Profesor(String nume, String prenume, String email, Grad gradDidactic, Asociere tipAsociere, String afiliere) {
@@ -52,12 +57,14 @@ public class Profesor {
         this.gradDidactic = gradDidactic;
         this.tipAsociere = tipAsociere;
         this.afiliere = afiliere;
+        this.arhivat = false;
     }
 
     @Override
     public String toString() {
         return "Profesor:{\nid=" + this.id + "\nnume=" + this.nume + "\nprenume=" + this.prenume + "\nemail=" + this.email
-                + "\ngrad=" +this.gradDidactic + "\nasociere=" + this.tipAsociere + "\nafiliere=" + this.afiliere + "\n}\n";
+                + "\ngrad=" +this.gradDidactic + "\nasociere=" + this.tipAsociere + "\nafiliere=" + this.afiliere +
+                "\narhivat=" + this.arhivat +"\n}\n";
     }
 
 }
