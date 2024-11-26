@@ -31,7 +31,7 @@ public class ProfesorService {
     }
 
     public Page<Profesor> ProfesorSearch(Pageable pageable,
-                                         String nume, String prenume, String email, Grad grad, Asociere asociere) {
+                                         String nume, String prenume, String email, Grad grad, Asociere asociere, boolean fromArhive) {
 
         if (nume != null && nume.length() > 50) {
             throw new SearchParamException(nume);
@@ -50,7 +50,7 @@ public class ProfesorService {
                         .and(emailContains(email))
                         .and(gradEquals(grad))
                         .and(asociareEquals(asociere))
-                        .and(arhivareEquals(false))
+                        .and(arhivareEquals(fromArhive))
         ), pageable);
     }
 

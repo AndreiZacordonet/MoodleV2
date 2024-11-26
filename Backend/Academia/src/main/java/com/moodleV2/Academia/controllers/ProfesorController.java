@@ -61,21 +61,17 @@ public class ProfesorController {
     @Parameter(name = "page", description = "Page number, starting at 0", example = "0")
     @Parameter(name = "size", description = "Number of items per page", example = "10")
     @Parameter(name = "sort", description = "Sort criteria: nume, prenume, email, gradDidactic, tipAsociere, asc, desc", example = "nume,asc")
+    @Parameter(name = "nume", description = "Filter by professor's last name (partial match allowed). Case-insensitive.", example = "Popescu")
+    @Parameter(name = "prenume", description = "Filter by professor's first name (partial match allowed). Case-insensitive.", example = "Ion")
+    @Parameter(name = "email", description = "Filter by professor's email address. Must be a valid email format.", example = "ion.popescu@example.com")
+    @Parameter(name = "grad", description = "Filter by professor's academic rank. Allowed values: ASISTENT, SEF_LUCRARI, CONFERENTIAR, PROFESOR", schema = @Schema(implementation = Grad.class))
+    @Parameter(name = "asociare", description = "Filter by professor's type of association. Allowed values: TITULAR, ASOCIAT, EXTERN", schema = @Schema(implementation = Asociere.class))
     ResponseEntity<?> getAll(Pageable pageable,
                              // TODO: de adaugat parametrul disciplina (probabil numele disciplinei)
-                             @Parameter(name = "nume", description = "Filter by professor's last name (partial match allowed). Case-insensitive.", example = "Popescu")
                              @RequestParam(name = "nume", required = false) String nume,
-
-                             @Parameter(name = "prenume", description = "Filter by professor's first name (partial match allowed). Case-insensitive.", example = "Ion")
                              @RequestParam(name = "prenume", required = false) String prenume,
-
-                             @Parameter(name = "email", description = "Filter by professor's email address. Must be a valid email format.", example = "ion.popescu@example.com")
                              @RequestParam(name = "email", required = false) String email,
-
-                             @Parameter(name = "grad", description = "Filter by professor's academic rank. Allowed values: ASSISTANT, LECTURER, PROFESSOR", schema = @Schema(implementation = Grad.class))
                              @RequestParam(name = "grad", required = false) Grad grad,
-
-                             @Parameter(name = "asociare", description = "Filter by professor's type of association. Allowed values: FULL_TIME, PART_TIME, VISITING", schema = @Schema(implementation = Asociere.class))
                              @RequestParam(name = "asociare", required = false) Asociere asociere) {    // DONE: verificare parametri de paginare
 
         // verificare dimeniuni paginare
@@ -87,7 +83,7 @@ public class ProfesorController {
 
         // PropertyReferenceException is thrown when sorting cannot be done by the specified parameter
         // 422 Unprocessable Content?
-        Page<Profesor> page = service.ProfesorSearch(pageable, nume, prenume, email, grad, asociere);
+        Page<Profesor> page = service.ProfesorSearch(pageable, nume, prenume, email, grad, asociere, false);
 
         List<EntityModel<ProfesorDto>> profesori =
                 page.getContent().stream()
@@ -262,7 +258,7 @@ public class ProfesorController {
 
 
     // TODO: add getArchivedProfesori endpoint
-    // TODO: add un-archived Profesor
+    // DONE: add un-archived Profesor
     /**
      * Un-Archives a teacher by its Id. <br/>
      * Does the opposite as {@code archiveById} <br/>
@@ -297,5 +293,98 @@ public class ProfesorController {
         repository.save(profesor);
 
         return ResponseEntity.ok(assembler.toModel(profesor));
+    }
+
+
+    @GetMapping("/profesori/archive/")
+    @Operation(summary = "Retrives all archived professors", description = "Retrives all archived professors")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+            @ApiResponse(responseCode = "416", description = "Pagination parameters not in range"),
+            @ApiResponse(responseCode = "422", description = "Sorting parameters not valid")
+    })
+    @Parameter(name = "page", description = "Page number, starting at 0", example = "0")
+    @Parameter(name = "size", description = "Number of items per page", example = "10")
+    @Parameter(name = "sort", description = "Sort criteria: nume, prenume, email, gradDidactic, tipAsociere, asc, desc", example = "nume,asc")
+    @Parameter(name = "nume", description = "Filter by professor's last name (partial match allowed). Case-insensitive.", example = "Popescu")
+    @Parameter(name = "prenume", description = "Filter by professor's first name (partial match allowed). Case-insensitive.", example = "Ion")
+    @Parameter(name = "email", description = "Filter by professor's email address. Must be a valid email format.", example = "ion.popescu@example.com")
+    @Parameter(name = "grad", description = "Filter by professor's academic rank. Allowed values: ASISTENT, SEF_LUCRARI, CONFERENTIAR, PROFESOR", schema = @Schema(implementation = Grad.class))
+    @Parameter(name = "asociare", description = "Filter by professor's type of association. Allowed values: TITULAR, ASOCIAT, EXTERN", schema = @Schema(implementation = Asociere.class))
+    ResponseEntity<?> getArchived(Pageable pageable,
+                                  // TODO: de adaugat parametrul disciplina (probabil numele disciplinei)
+                                  @RequestParam(name = "nume", required = false) String nume,
+                                  @RequestParam(name = "prenume", required = false) String prenume,
+                                  @RequestParam(name = "email", required = false) String email,
+                                  @RequestParam(name = "grad", required = false) Grad grad,
+                                  @RequestParam(name = "asociare", required = false) Asociere asociere) {    // DONE: verificare parametri de paginare
+
+        // verificare dimeniuni paginare
+        // TODO: add PROFESOR_MAX_COUNT and PROFESOR_MAX_PAGE_SIZE constants in application properties
+        if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
+            // default values for page and size (0, 20) override any errors like assigning a string or a negative number
+            throw new LengthPaginationException();
+        }
+
+        // PropertyReferenceException is thrown when sorting cannot be done by the specified parameter
+        // 422 Unprocessable Content?
+        Page<Profesor> page = service.ProfesorSearch(pageable, nume, prenume, email, grad, asociere, true);
+
+        List<EntityModel<ProfesorDto>> profesori =
+                page.getContent().stream()
+                        .map(assembler::toModel)
+                        .toList();
+
+        PagedModel<EntityModel<ProfesorDto>> pagedModel = PagedModel.of(
+                profesori,
+                new PagedModel.PageMetadata(
+                        page.getSize(),
+                        page.getNumber(),
+                        page.getTotalElements(),
+                        page.getTotalPages()
+                ),
+                Link.of(linkTo(methodOn(ProfesorController.class).getArchived(pageable, nume, prenume, email, grad, asociere)).toUriComponentsBuilder()
+                                .queryParam("page", page.getNumber())
+                                .queryParam("size", page.getSize())
+                                .toUriString())
+                        .withSelfRel()
+        );
+
+        if (page.hasPrevious()) {
+            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getArchived(pageable, nume, prenume, email, grad, asociere)).toUriComponentsBuilder()
+                            .queryParam("page",pageable.getPageNumber() - 1)
+                            .queryParam("size", pageable.getPageSize())
+                            .toUriString())
+                    .withRel("prev")
+            );
+        }
+
+        if (page.hasNext()) {
+            pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getArchived(pageable, nume, prenume, email, grad, asociere)).toUriComponentsBuilder()
+                            .queryParam("page",pageable.getPageNumber() + 1)
+                            .queryParam("size", pageable.getPageSize())
+                            .toUriString())
+                    .withRel("next")
+            );
+        }
+
+        // adding first page link
+        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getArchived(pageable, nume, prenume, email, grad, asociere)).toUriComponentsBuilder()
+                        .queryParam("page",0)
+                        .queryParam("size", pageable.getPageSize())
+                        .toUriString())
+                .withRel("first")
+        );
+
+        // adding last page link
+        pagedModel.add(Link.of(linkTo(methodOn(ProfesorController.class).getArchived(pageable, nume, prenume, email, grad, asociere)).toUriComponentsBuilder()
+                        .queryParam("page",page.getTotalPages() - 1)
+                        .queryParam("size", pageable.getPageSize())
+                        .toUriString())
+                .withRel("last")
+        );
+
+        return ResponseEntity.ok(pagedModel);
+
     }
 }
