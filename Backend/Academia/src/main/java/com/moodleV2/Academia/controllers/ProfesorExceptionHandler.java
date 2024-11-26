@@ -137,8 +137,8 @@ public class ProfesorExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(body);
     }
 
-    @ExceptionHandler(ProfesorAlreadyArchivedException.class)
-    public ResponseEntity<?> handleProfesorAlreadyArchivedException(ProfesorAlreadyArchivedException ex, HttpServletRequest request) {
+    @ExceptionHandler(ProfesorArchivedException.class)
+    public ResponseEntity<?> handleProfesorAlreadyArchivedException(ProfesorArchivedException ex, HttpServletRequest request) {
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("timestamp", LocalDateTime.now());

@@ -1,12 +1,10 @@
 package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.ProfesorDto;
-import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
-import com.moodleV2.Academia.exceptions.ProfesorAlreadyArchivedException;
+import com.moodleV2.Academia.exceptions.ProfesorArchivedException;
 import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
 import com.moodleV2.Academia.models.Asociere;
-import com.moodleV2.Academia.models.Disciplina;
 import com.moodleV2.Academia.models.Grad;
 import com.moodleV2.Academia.models.Profesor;
 import com.moodleV2.Academia.repositories.DisciplinaRepository;
@@ -188,21 +186,24 @@ public class ProfesorController {
                 .toUri()).body(profesorEntityModel);
     }
 
+
+
     /**
-     * Arhives a teacher by it's Id.
-     * If the teacher is already archived throws an error
+     * Archives a teacher by its Id. <br/>
+     * If the teacher is already archived throws an error <br/>
+     * This endpoint is only accessible to admins.
      * @param id
-     * @return Profesor DTO
+     * @return {@code Profesor DTO} incapsulated in a {@code ResponseEntity}
      */
-    @DeleteMapping("/profesori/{id}")
-    @Operation(summary = "Delete one professor", description = "Delete one professor by its id")
+    @PatchMapping("/profesori/{id}")   // FIXME: should this be patch?
+    @Operation(summary = "Archives one professor", description = "Archives one professor by its id")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully deleted"),
+            @ApiResponse(responseCode = "200", description = "Successfully archived"),
             @ApiResponse(responseCode = "404", description = "Profesor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
-    @Parameter(name = "id", description = "Professor ID to be deleted", example = "123")
-    ResponseEntity<?> deleteById(@PathVariable Long id) {
+    @Parameter(name = "id", description = "Professor ID to be archived", example = "123")
+    ResponseEntity<?> archiveById(@PathVariable Long id) {
         // TODO: delete teachers discipline first discipline if any
         // DONE: archive flag
 
@@ -215,7 +216,7 @@ public class ProfesorController {
 
         // daca profesorul este arhivat acesta nu va fi returnat
         if (profesor.isArhivat()) {
-            throw new ProfesorAlreadyArchivedException("Professor with id " + id + " is already archived");
+            throw new ProfesorArchivedException("Professor with id " + id + " is already archived");
         }
 
         profesor.setArhivat(true);
@@ -224,7 +225,8 @@ public class ProfesorController {
         return ResponseEntity.ok(assembler.toModel(profesor));
     }
 
-    @PatchMapping("/profesori/{id}")
+
+    @PatchMapping("/profesori/update/{id}")
     @Operation(summary = "Update a professor", description = "Updates one or more fields of a professor")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
@@ -259,8 +261,41 @@ public class ProfesorController {
     }
 
 
-    //TODO: add getArchivedProfesori
+    // TODO: add getArchivedProfesori endpoint
+    // TODO: add un-archived Profesor
     /**
-     * Only admins can use this route
+     * Un-Archives a teacher by its Id. <br/>
+     * Does the opposite as {@code archiveById} <br/>
+     * If the teacher is not archived throws an error <br/>
+     * This endpoint is only accessible to admins.
+     * @param id
+     * @return {@code Profesor DTO} incapsulated in a {@code ResponseEntity}
      */
+    @PatchMapping("/profesori/archive/{id}")   // FIXME: should this be patch?
+    @Operation(summary = "Un-Archives one professor", description = "Un-Archives one professor by its id")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
+            @ApiResponse(responseCode = "404", description = "Profesor not found"),
+            @ApiResponse(responseCode = "416", description = "Invalid identifier")
+    })
+    @Parameter(name = "id", description = "Professor ID to be deleted", example = "123")
+    ResponseEntity<?> removeFromArchiveById(@PathVariable Long id) {
+
+        if (id > 1000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Profesor profesor = repository.findById(id)
+                .orElseThrow(() -> new ProfesorNotFoundException(id));
+
+        // daca profesorul nu este arhivat acesta nu va fi modificat
+        if (!profesor.isArhivat()) {
+            throw new ProfesorArchivedException("Professor with id " + id + " is NOT archived");
+        }
+
+        profesor.setArhivat(false);
+        repository.save(profesor);
+
+        return ResponseEntity.ok(assembler.toModel(profesor));
+    }
 }
