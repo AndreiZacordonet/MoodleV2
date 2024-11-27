@@ -33,7 +33,7 @@ public class Profesor {
     private String email;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "grad_didactic")
+    @Column(name = "grad_didactic", nullable = false)
     private Grad gradDidactic;
 
     @Enumerated(EnumType.STRING)
@@ -44,7 +44,7 @@ public class Profesor {
     @Size(max = 50)
     private String afiliere;
 
-    @Column(name = "arhivat")
+    @Column(name = "arhivat", nullable = false)
     @BooleanFlag
     private boolean arhivat;
 

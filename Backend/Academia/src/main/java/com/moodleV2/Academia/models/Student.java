@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import jdk.jfr.BooleanFlag;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -48,6 +49,10 @@ public class Student {
     @Max(50)
     private int grupa;
 
+    @Column(name = "arhivat", nullable = false)
+    @BooleanFlag
+    private boolean arhivat;
+
     public Student() {}
 
     public Student(String nume, String prenume, String email, Ciclu cicluStudii, int anStudiu, int grupa) {
@@ -57,6 +62,7 @@ public class Student {
         this.cicluStudii = cicluStudii;
         this.anStudiu = anStudiu;
         this.grupa = grupa;
+        this.arhivat = false;
     }
 
     @ManyToMany(fetch=FetchType.EAGER)
