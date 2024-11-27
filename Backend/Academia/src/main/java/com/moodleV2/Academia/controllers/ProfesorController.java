@@ -257,7 +257,7 @@ public class ProfesorController {
     }
 
 
-    // TODO: add getArchivedProfesori endpoint
+    // DONE: add getArchivedProfesori endpoint
     // DONE: add un-archived Profesor
     /**
      * Un-Archives a teacher by its Id. <br/>
@@ -296,6 +296,17 @@ public class ProfesorController {
     }
 
 
+    /**
+     * Retrives all archived teachers <br>
+     * The endpoint is only accessible to admins.
+     * @param pageable
+     * @param nume
+     * @param prenume
+     * @param email
+     * @param grad
+     * @param asociere
+     * @return {@code Profesor DTO list} incapsulated in a {@code ResponseEntity}
+     */
     @GetMapping("/profesori/archive/")
     @Operation(summary = "Retrives all archived professors", description = "Retrives all archived professors")
     @ApiResponses(value = {

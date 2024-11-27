@@ -57,6 +57,15 @@ public class ProfesorDto {
         this.afiliere = afiliere;
     }
 
+    public ProfesorDto(Profesor profesor) {
+        this.nume = profesor.getNume();
+        this.prenume = profesor.getPrenume();
+        this.email = profesor.getEmail();
+        this.gradDidactic = profesor.getGradDidactic();
+        this.tipAsociere = profesor.getTipAsociere();
+        this.afiliere = profesor.getAfiliere();
+    }
+
     public Profesor ProfesorMapper() {
         return new Profesor(
                 this.nume,

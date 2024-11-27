@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
+import jdk.jfr.BooleanFlag;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,7 +23,7 @@ public class Disciplina {
     private Profesor idTitular;
 
     @Column(name = "nume_disciplina", nullable = false)
-    @Size(max = 100)
+    @Size(min = 2, max = 100)
     private String numeDisciplina;
 
     @Column(name = "an_studiu", nullable = false)
@@ -42,6 +43,10 @@ public class Disciplina {
     @Column(name = "tip_examinare", nullable = false)
     private TipExaminare tipExaminare;
 
+    @Column(name = "arhivat", nullable = false)
+    @BooleanFlag
+    private boolean arhivat;
+
     public Disciplina() {}
 
     public Disciplina(String cod, Profesor idTitular, String numeDisciplina, int anStudiu, TipDisciplina tipDisciplina, Categorie categorie, TipExaminare tipExaminare) {
@@ -52,5 +57,6 @@ public class Disciplina {
         this.tipDisciplina = tipDisciplina;
         this.categorie = categorie;
         this.tipExaminare = tipExaminare;
+        this.arhivat = false;
     }
 }
