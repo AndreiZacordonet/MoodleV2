@@ -59,6 +59,7 @@ public class ProfesorService {
         List<Disciplina> disciplinaList = disciplinaRepository.findAll(Specification.where(
                 codEquals(codDisciplina)
                         .or(numeContains(numeDisciplina))
+                        .and(arhivareEquals2(fromArhive))
         ));
 
         // get profesor id de la o anumita disciplina
@@ -70,6 +71,9 @@ public class ProfesorService {
                     return disciplina.getIdTitular().isArhivat() ? null : disciplina.getIdTitular().getId();
                 }).toList();
 
+        if ((codDisciplina != null || numeDisciplina != null) && idList.isEmpty()) {
+            return Page.empty(pageable);
+        }
         return profesorRepository.findAll(Specification.where(
                 nameContains(nume)
                         .and(prenumeContains(prenume))
@@ -119,6 +123,10 @@ public class ProfesorService {
     public static Specification<Disciplina> numeContains(String nume) {
         return (root, query, criteriaBuilder) ->
                 nume == null ? null : criteriaBuilder.like(criteriaBuilder.lower(root.get("numeDisciplina")), "%" + nume.toLowerCase() + "%");
+    }
+
+    public static Specification<Disciplina> arhivareEquals2(boolean arhivat) {
+        return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("arhivat"), arhivat);
     }
 
     // pentru selectarea profesorilor arhivati
