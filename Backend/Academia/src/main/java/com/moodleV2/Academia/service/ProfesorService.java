@@ -52,7 +52,7 @@ public class ProfesorService {
         if (codDisciplina != null && codDisciplina.length() > 20) {
             throw new SearchParamException(codDisciplina);
         }
-        if (numeDisciplina != null && numeDisciplina.length() > 20) {
+        if (numeDisciplina != null && numeDisciplina.length() > 100) {
             throw new SearchParamException(numeDisciplina);
         }
 
