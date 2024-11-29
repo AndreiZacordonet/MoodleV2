@@ -29,7 +29,7 @@ public class DisciplinaModelAssembler implements RepresentationModelAssembler<Di
 
         return EntityModel.of(disciplinaDto,
                 linkTo(methodOn(DisciplinaController.class).getByCode(disciplina.getCod())).withSelfRel().withType("GET"),
-                linkTo(methodOn(DisciplinaController.class).getAll(PageRequest.of(0, 10))).withRel("discipline").withType("GET"),
+                linkTo(methodOn(DisciplinaController.class).getAll(PageRequest.of(0, 10), null, null, null, null, null, null, null, null)).withRel("discipline").withType("GET"),
                 Link.of("/v3/api-docs").withRel("api-docs").withTitle("API Documentation"));
     }
 }
