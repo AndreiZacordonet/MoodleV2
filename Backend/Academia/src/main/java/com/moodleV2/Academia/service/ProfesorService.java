@@ -2,12 +2,15 @@ package com.moodleV2.Academia.service;
 
 import com.moodleV2.Academia.controllers.ProfesorModelAssembler;
 import com.moodleV2.Academia.dto.ProfesorDto;
+import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
 import com.moodleV2.Academia.exceptions.InvalidFieldException;
 import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
 import com.moodleV2.Academia.exceptions.SearchParamException;
 import com.moodleV2.Academia.models.Asociere;
+import com.moodleV2.Academia.models.Disciplina;
 import com.moodleV2.Academia.models.Grad;
 import com.moodleV2.Academia.models.Profesor;
+import com.moodleV2.Academia.repositories.DisciplinaRepository;
 import com.moodleV2.Academia.repositories.ProfesorRepository;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.data.domain.Page;
@@ -16,6 +19,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -23,15 +27,17 @@ import java.util.Map;
 public class ProfesorService {
 
     private final ProfesorRepository profesorRepository;
+    private final DisciplinaRepository disciplinaRepository;
     private final ProfesorModelAssembler assembler;
 
-    public ProfesorService(ProfesorRepository profesorRepository, ProfesorModelAssembler assembler) {
+    public ProfesorService(ProfesorRepository profesorRepository, DisciplinaRepository disciplinaRepository, ProfesorModelAssembler assembler) {
         this.profesorRepository = profesorRepository;
+        this.disciplinaRepository = disciplinaRepository;
         this.assembler = assembler;
     }
 
     public Page<Profesor> ProfesorSearch(Pageable pageable,
-                                         String nume, String prenume, String email, Grad grad, Asociere asociere, boolean fromArhive) {
+                                         String nume, String prenume, String email, Grad grad, Asociere asociere, String codDisciplina, String numeDisciplina, boolean fromArhive) {
 
         if (nume != null && nume.length() > 50) {
             throw new SearchParamException(nume);
@@ -43,6 +49,21 @@ public class ProfesorService {
         if (email != null && (email.length() > 50 || !emailValidator.isValid(email, null))) {
             throw new SearchParamException(email);
         }
+        if (codDisciplina != null && codDisciplina.length() > 20) {
+            throw new SearchParamException(codDisciplina);
+        }
+        if (numeDisciplina != null && numeDisciplina.length() > 20) {
+            throw new SearchParamException(numeDisciplina);
+        }
+
+        List<Disciplina> disciplinaList = disciplinaRepository.findAll(Specification.where(
+                codEquals(codDisciplina)
+                        .or(numeContains(numeDisciplina))
+        ));
+
+        // get profesor id de la o anumita disciplina
+        List<Long> idList = disciplinaList.stream()
+                .map(disciplina -> disciplina.getIdTitular().getId()).toList();
 
         return profesorRepository.findAll(Specification.where(
                 nameContains(nume)
@@ -51,6 +72,7 @@ public class ProfesorService {
                         .and(gradEquals(grad))
                         .and(asociareEquals(asociere))
                         .and(arhivareEquals(fromArhive))
+                        .and(idsIn(idList))
         ), pageable);
     }
 
@@ -77,6 +99,22 @@ public class ProfesorService {
     public static Specification<Profesor> asociareEquals(Asociere asociere) {
         return (root, query, criteriaBuilder) ->
                 asociere == null ? null : criteriaBuilder.equal(root.get("tipAsociere"), asociere);
+    }
+
+    public static Specification<Profesor> idsIn(List<Long> ids) {
+        return (root, query, criteriaBuilder) ->
+                ids == null || ids.isEmpty() ? null : root.get("id").in(ids);
+    }
+
+
+    public static Specification<Disciplina> codEquals(String cod) {
+        return (root, query, criteriaBuilder) ->
+                cod == null ? null : criteriaBuilder.equal(root.get("cod"), cod);
+    }
+
+    public static Specification<Disciplina> numeContains(String nume) {
+        return (root, query, criteriaBuilder) ->
+                nume == null ? null : criteriaBuilder.like(criteriaBuilder.lower(root.get("numeDisciplina")), "%" + nume.toLowerCase() + "%");
     }
 
     // pentru selectarea profesorilor arhivati
