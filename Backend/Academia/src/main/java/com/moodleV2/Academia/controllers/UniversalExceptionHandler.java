@@ -23,9 +23,11 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class UniversalExceptionHandler {
 
     // DONE: add link to api documentation
-    private static RepresentationModel<?> links = new RepresentationModel<>()
+    private static final RepresentationModel<?> links = new RepresentationModel<>()
             .add(linkTo(methodOn(ProfesorController.class).getAll(PageRequest.of(0, 10), null, null, null, null, null, null, null))
                     .withRel("profesori"))
+            .add(linkTo(methodOn(DisciplinaController.class).getAll(PageRequest.of(0, 10), null, null, null, null, null, null, null, null))
+                    .withRel("discipline"))
             .add(Link.of("/v3/api-docs").withRel("api-docs").withTitle("API Documentation"));
 //        links.add(linkTo(methodOn(ProfesorController.class).getAll(PageRequest.of(0, 10))).withRel("profesori"));
 
