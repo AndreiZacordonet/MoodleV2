@@ -63,7 +63,12 @@ public class ProfesorService {
 
         // get profesor id de la o anumita disciplina
         List<Long> idList = disciplinaList.stream()
-                .map(disciplina -> disciplina.getIdTitular().getId()).toList();
+                .map(disciplina -> {
+                    if (fromArhive) {
+                        return disciplina.getIdTitular().isArhivat() ? disciplina.getIdTitular().getId() : null;
+                    }
+                    return disciplina.getIdTitular().isArhivat() ? null : disciplina.getIdTitular().getId();
+                }).toList();
 
         return profesorRepository.findAll(Specification.where(
                 nameContains(nume)
@@ -105,7 +110,6 @@ public class ProfesorService {
         return (root, query, criteriaBuilder) ->
                 ids == null || ids.isEmpty() ? null : root.get("id").in(ids);
     }
-
 
     public static Specification<Disciplina> codEquals(String cod) {
         return (root, query, criteriaBuilder) ->

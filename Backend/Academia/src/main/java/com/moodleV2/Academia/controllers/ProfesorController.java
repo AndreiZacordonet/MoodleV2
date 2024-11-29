@@ -195,7 +195,7 @@ public class ProfesorController {
      * @param id
      * @return {@code Profesor DTO} incapsulated in a {@code ResponseEntity}
      */
-    @PatchMapping("/profesori/{id}")   // FIXME: should this be patch?
+    @DeleteMapping("/profesori/{id}")   // FIXME: should this be patch?
     @Operation(summary = "Archives one professor", description = "Archives one professor by its id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully archived"),
@@ -271,14 +271,14 @@ public class ProfesorController {
      * @param id
      * @return {@code Profesor DTO} incapsulated in a {@code ResponseEntity}
      */
-    @PatchMapping("/profesori/archive/{id}")   // FIXME: should this be patch?
+    @PostMapping("/profesori/{id}/activate")   // FIXME: should this be patch?
     @Operation(summary = "Un-Archives one professor", description = "Un-Archives one professor by its id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
             @ApiResponse(responseCode = "404", description = "Profesor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
-    @Parameter(name = "id", description = "Professor ID to be deleted", example = "123")
+    @Parameter(name = "id", description = "Professor ID to be un-archived", example = "123")
     ResponseEntity<?> removeFromArchiveById(@PathVariable Long id) {
 
         if (id > 1000 || id < 0) {
