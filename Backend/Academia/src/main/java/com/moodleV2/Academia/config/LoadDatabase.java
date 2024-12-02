@@ -38,8 +38,12 @@ public class LoadDatabase {
             // courses loading
             Disciplina apd = new Disciplina("1234", ciorbea, "ADP", 4, TipDisciplina.IMPUSA, Categorie.ADIACENTA, TipExaminare.COLOCVIU);
             Disciplina ia = new Disciplina("77777", ciorbea, "IA", 1, TipDisciplina.LIBER_ALEASA, Categorie.SPECIALITATE, TipExaminare.EXAMEN);
+            Disciplina mn = new Disciplina("LET12", misu, "MN", 1, TipDisciplina.LIBER_ALEASA, Categorie.SPECIALITATE, TipExaminare.EXAMEN);
+            Disciplina pc = new Disciplina("SERBia", barbotea, "PC", 1, TipDisciplina.LIBER_ALEASA, Categorie.SPECIALITATE, TipExaminare.EXAMEN);
             log.info("Preloading " + disciplinaRepository.save(apd));
             log.info("Preloading " + disciplinaRepository.save(ia));
+            log.info("Preloading " + disciplinaRepository.save(mn));
+            log.info("Preloading " + disciplinaRepository.save(pc));
 
             // students loading
             Student picu = new Student("Picunigu", "Toader", "niguteo516@yahoo.com", Ciclu.LICENTA, 3, 10);
