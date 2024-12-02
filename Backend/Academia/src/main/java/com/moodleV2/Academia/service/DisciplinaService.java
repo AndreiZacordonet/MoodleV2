@@ -49,18 +49,22 @@ public class DisciplinaService {
             throw new SearchParamException(numePrenumeTitular);
         }
 
-        List<Profesor> profesorList;
-        if (numePrenumeTitular != null) {
-            // this may really produce NullPointerException??
-            String[] arr = numePrenumeTitular.split("\\s");
-            String n = arr[0];
-            String p = arr.length > 1 ? arr[1] : null;
-
-            profesorList = profesorRepository.findAll(Specification.where(
-                    numeContains(n)
-                            .or(prenumeContains(p))
-                            .and(arhivareEquals(fromArchive))
-            ));
+        List<Profesor> profesorList = null;
+        String n = null, p = null;
+        if (numePrenumeTitular != null && !numePrenumeTitular.isBlank()) {
+            //
+            String[] numePrenume = numePrenumeTitular.split("\\s");
+            n = numePrenume[0];
+            p = numePrenume.length > 1 ? numePrenume[1] : null;
+        }
+        profesorList = profesorRepository.findAll(Specification.where(
+                numeContains(n)
+                        .or(prenumeContains(p))
+                        .and(emailContains(emailTitular))
+                        .and(arhivareEquals(fromArchive))
+        ));
+        if (profesorList.isEmpty()) {
+            return Page.empty(pageable);
         }
 
         return disciplinaRepository.findAll(Specification.where(
@@ -71,7 +75,7 @@ public class DisciplinaService {
                         .and(tipExaminareEquals(tipExaminare))
                         .and(categorieEquals(categorie))
                         .and(arhivareEquals2(fromArchive))
-                        // TODO: search by profesor logic
+                        .and(profesorIdEquals(profesorList))
         ), pageable);
 
     }
@@ -110,6 +114,18 @@ public class DisciplinaService {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("arhivat"), arhivat);
     }
 
+    public static Specification<Disciplina> profesorIdEquals(List<Profesor> profesorList) {
+        if (profesorList == null || profesorList.isEmpty()) {
+            return ((root, query, criteriaBuilder) -> criteriaBuilder.conjunction());
+        }
+
+        List<Long> profesorIds = profesorList.stream()
+                .map(Profesor::getId)
+                .toList();
+
+        return (root, query, criteriaBuilder) -> root.get("idTitular").get("id").in(profesorIds);
+    }
+
     public static Specification<Profesor> numeContains(String nume) {
         return (root, query, criteriaBuilder) ->
                 nume == null ? null : criteriaBuilder.like(criteriaBuilder.lower(root.get("nume")), "%" + nume.toLowerCase() + "%");
@@ -118,6 +134,11 @@ public class DisciplinaService {
     public static Specification<Profesor> prenumeContains(String prenume) {
         return (root, query, criteriaBuilder) ->
                 prenume == null ? null : criteriaBuilder.like(criteriaBuilder.lower(root.get("prenume")), "%" + prenume.toLowerCase() + "%");
+    }
+
+    public static Specification<Profesor> emailContains(String email) {
+        return (root, query, criteriaBuilder) ->
+                email == null ? null : criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), "%" + email.toLowerCase() + "%");
     }
 
     public static Specification<Profesor> arhivareEquals(boolean arhivat) {

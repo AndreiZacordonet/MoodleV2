@@ -41,7 +41,7 @@ public class DisciplinaController {
     @Parameter(name = "page", description = "Page number, starting at 0", example = "0")
     @Parameter(name = "size", description = "Number of items per page", example = "10")
     @Parameter(name = "sort", description = "Sort criteria: numeDisciplina, cod, anStudiu, categorie, tipExaminare, tipDisciplina, asc, desc", example = "numeDisciplina,asc")
-    ResponseEntity<?> getAll(Pageable pageable,     // TODO: filter by students?
+    ResponseEntity<?> getAll(Pageable pageable,
                              @RequestParam(name = "cod", required = false) String cod,
                              @RequestParam(name = "numeDisciplina", required = false) String nume,
                              @RequestParam(name = "anStudiu", required = false) Integer anStudiu,
