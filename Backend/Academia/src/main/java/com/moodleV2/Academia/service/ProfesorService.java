@@ -56,20 +56,23 @@ public class ProfesorService {
             throw new SearchParamException(numeDisciplina);
         }
 
-        List<Disciplina> disciplinaList = disciplinaRepository.findAll(Specification.where(
-                codEquals(codDisciplina)
-                        .or(numeContains(numeDisciplina))
-                        .and(arhivareEquals2(fromArhive))
-        ));
+        List<Long> idList = null;
+        if (codDisciplina != null || numeDisciplina != null) {
+            List<Disciplina> disciplinaList = disciplinaRepository.findAll(Specification.where(
+                    codEquals(codDisciplina)
+                            .or(numeContains(numeDisciplina))
+                            .and(arhivareEquals2(fromArhive))
+            ));
 
-        // get profesor id de la o anumita disciplina
-        List<Long> idList = disciplinaList.stream()
-                .map(disciplina -> {
-                    if (fromArhive) {
-                        return disciplina.getIdTitular().isArhivat() ? disciplina.getIdTitular().getId() : null;
-                    }
-                    return disciplina.getIdTitular().isArhivat() ? null : disciplina.getIdTitular().getId();
-                }).toList();
+            // get profesor id from a discipline
+            idList = disciplinaList.stream()
+                    .map(disciplina -> {
+                        if (fromArhive) {
+                            return disciplina.getIdTitular().isArhivat() ? disciplina.getIdTitular().getId() : null;
+                        }
+                        return disciplina.getIdTitular().isArhivat() ? null : disciplina.getIdTitular().getId();
+                    }).toList();
+        }
 
         if ((codDisciplina != null || numeDisciplina != null) && idList.isEmpty()) {
             return Page.empty(pageable);
