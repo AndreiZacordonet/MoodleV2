@@ -7,7 +7,6 @@ import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
 import com.moodleV2.Academia.models.Asociere;
 import com.moodleV2.Academia.models.Grad;
 import com.moodleV2.Academia.models.Profesor;
-import com.moodleV2.Academia.repositories.DisciplinaRepository;
 import com.moodleV2.Academia.repositories.ProfesorRepository;
 import com.moodleV2.Academia.service.ProfesorService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,7 +16,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.EntityModel;
@@ -35,19 +33,16 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/academia")
-//@Validated
 public class ProfesorController {
 
     private final ProfesorRepository repository;
     private final ProfesorModelAssembler assembler;
     private final ProfesorService service;
-    private final DisciplinaRepository disciplinaRepository;
 
-    public ProfesorController(ProfesorRepository repository, ProfesorModelAssembler assembler, ValidationAutoConfiguration validationAutoConfiguration, ProfesorService service, DisciplinaRepository disciplinaRepository) {
+    public ProfesorController(ProfesorRepository repository, ProfesorModelAssembler assembler, ProfesorService service) {
         this.repository = repository;
         this.assembler = assembler;
         this.service = service;
-        this.disciplinaRepository = disciplinaRepository;
     }
 
     @GetMapping("/profesori")
@@ -69,7 +64,6 @@ public class ProfesorController {
     @Parameter(name = "codDisciplina", description = "Filter by class code", example = "MATH69")
     @Parameter(name = "numeDisciplina", description = "Filter by class name", example = "Matematici interesante si dragute")
     ResponseEntity<?> getAll(Pageable pageable,
-                             // TODO: de adaugat parametrul disciplina (probabil numele disciplinei)
                              @RequestParam(name = "nume", required = false) String nume,
                              @RequestParam(name = "prenume", required = false) String prenume,
                              @RequestParam(name = "email", required = false) String email,
@@ -78,7 +72,7 @@ public class ProfesorController {
                              @RequestParam(name = "codDisciplina", required = false) String codDisciplina,
                              @RequestParam(name = "numeDisciplina", required = false) String numeDisciplina) {    // DONE: verificare parametri de paginare
 
-        // verificare dimeniuni paginare
+        // check pagination dimentions
         // TODO: add PROFESOR_MAX_COUNT and PROFESOR_MAX_PAGE_SIZE constants in application properties
         if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
             // default values for page and size (0, 20) override any errors like assigning a string or a negative number
@@ -162,7 +156,7 @@ public class ProfesorController {
         Profesor profesor = repository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
 
-        // daca profesorul este arhivat acesta nu va fi returnat
+        // if professor is archived then don't return a professor
         if (profesor.isArhivat()) {
             throw new ProfesorNotFoundException(id);
         }
@@ -195,7 +189,7 @@ public class ProfesorController {
      * @param id
      * @return {@code Profesor DTO} incapsulated in a {@code ResponseEntity}
      */
-    @DeleteMapping("/profesori/{id}")   // FIXME: should this be patch?
+    @DeleteMapping("/profesori/{id}")
     @Operation(summary = "Archives one professor", description = "Archives one professor by its id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully archived"),
@@ -204,8 +198,6 @@ public class ProfesorController {
     })
     @Parameter(name = "id", description = "Professor ID to be archived", example = "123")
     ResponseEntity<?> archiveById(@PathVariable Long id) {
-        // TODO: delete teachers discipline first discipline if any
-        // DONE: archive flag
 
         if (id > 1000 || id < 0) {
             throw new IndexOutOfBoundsException();
@@ -214,7 +206,7 @@ public class ProfesorController {
         Profesor profesor = repository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
 
-        // daca profesorul este arhivat acesta nu va fi returnat
+        // if professor is archived then don't return a professor
         if (profesor.isArhivat()) {
             throw new ProfesorArchivedException("Professor with id " + id + " is already archived");
         }
@@ -271,7 +263,7 @@ public class ProfesorController {
      * @param id
      * @return {@code Profesor DTO} incapsulated in a {@code ResponseEntity}
      */
-    @PostMapping("/profesori/{id}/activate")   // FIXME: should this be patch?
+    @PostMapping("/profesori/{id}/activate")
     @Operation(summary = "Un-Archives one professor", description = "Un-Archives one professor by its id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
@@ -288,7 +280,7 @@ public class ProfesorController {
         Profesor profesor = repository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
 
-        // daca profesorul nu este arhivat acesta nu va fi modificat
+        // if professor is archived then don't return a professor
         if (!profesor.isArhivat()) {
             throw new ProfesorArchivedException("Professor with id " + id + " is NOT archived");
         }
@@ -331,7 +323,6 @@ public class ProfesorController {
     @Parameter(name = "codDisciplina", description = "Filter by class code", example = "MATH69")
     @Parameter(name = "numeDisciplina", description = "Filter by class name", example = "Matematici interesante si dragute")
     ResponseEntity<?> getArchived(Pageable pageable,
-                                  // TODO: de adaugat parametrul disciplina (probabil numele disciplinei)
                                   @RequestParam(name = "nume", required = false) String nume,
                                   @RequestParam(name = "prenume", required = false) String prenume,
                                   @RequestParam(name = "email", required = false) String email,
@@ -340,7 +331,7 @@ public class ProfesorController {
                                   @RequestParam(name = "codDisciplina", required = false) String codDisciplina,
                                   @RequestParam(name = "numeDisciplina", required = false) String numeDisciplina) {    // DONE: verificare parametri de paginare
 
-        // verificare dimeniuni paginare
+        // check page dimentions
         // TODO: add PROFESOR_MAX_COUNT and PROFESOR_MAX_PAGE_SIZE constants in application properties
         if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
             // default values for page and size (0, 20) override any errors like assigning a string or a negative number
