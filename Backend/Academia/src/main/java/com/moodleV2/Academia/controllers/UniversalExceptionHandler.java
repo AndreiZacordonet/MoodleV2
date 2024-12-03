@@ -89,4 +89,9 @@ public class UniversalExceptionHandler {
     public ResponseEntity<?> handleDisciplinaNotFoundException(DisciplinaNotFoundException ex, HttpServletRequest request) {
         return bodyBuild(HttpStatus.NOT_FOUND, "Disciplina not found", ex.getMessage(), request);
     }
+
+    @ExceptionHandler(DisciplinaArchivedException.class)
+    public ResponseEntity<?> handleDisciplinaArchivedException(DisciplinaArchivedException ex, HttpServletRequest request) {
+        return bodyBuild(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
 }

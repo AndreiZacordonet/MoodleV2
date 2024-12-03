@@ -2,6 +2,7 @@ package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.DisciplinaDtoCreateNew;
+import com.moodleV2.Academia.exceptions.DisciplinaArchivedException;
 import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
 import com.moodleV2.Academia.models.Categorie;
@@ -139,5 +140,27 @@ public class DisciplinaController {
 
         return ResponseEntity.created(disciplinaDtoEntityModel.getRequiredLink(IanaLinkRelations.SELF)
                 .toUri()).body(disciplinaDtoEntityModel);
+    }
+
+
+    @DeleteMapping("/discipline/{code}")
+    ResponseEntity<?> archiveById(@PathVariable String code) {
+
+        // TODO: isBlanck validations to all strings?
+        if (code.isEmpty() || code.length() > 20) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Disciplina disciplina = repository.findById(code)
+                .orElseThrow(() -> new DisciplinaNotFoundException(code));
+
+        if (disciplina.isArhivat()) {
+            throw new DisciplinaArchivedException("Class with code " + code + " is already archived");
+        }
+
+        disciplina.setArhivat(true);
+        repository.save(disciplina);
+
+        return ResponseEntity.ok(assembler.toModel(disciplina));
     }
 }
