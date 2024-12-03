@@ -1,6 +1,8 @@
 package com.moodleV2.Academia.service;
 
+import com.moodleV2.Academia.controllers.DisciplinaModelAssembler;
 import com.moodleV2.Academia.controllers.ProfesorModelAssembler;
+import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.ProfesorDto;
 import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
 import com.moodleV2.Academia.exceptions.InvalidFieldException;
@@ -29,11 +31,13 @@ public class ProfesorService {
     private final ProfesorRepository profesorRepository;
     private final DisciplinaRepository disciplinaRepository;
     private final ProfesorModelAssembler assembler;
+    private final DisciplinaModelAssembler assemblerDisciplina;
 
-    public ProfesorService(ProfesorRepository profesorRepository, DisciplinaRepository disciplinaRepository, ProfesorModelAssembler assembler) {
+    public ProfesorService(ProfesorRepository profesorRepository, DisciplinaRepository disciplinaRepository, ProfesorModelAssembler assembler, DisciplinaModelAssembler assemblerDisciplina) {
         this.profesorRepository = profesorRepository;
         this.disciplinaRepository = disciplinaRepository;
         this.assembler = assembler;
+        this.assemblerDisciplina = assemblerDisciplina;
     }
 
     public Page<Profesor> ProfesorSearch(Pageable pageable,
@@ -230,4 +234,20 @@ public class ProfesorService {
 
         return profesor;
     }
+
+    public List<EntityModel<DisciplinaDto>> getDiscipline(Long id) {
+
+        if (id > 1000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Profesor profesor = profesorRepository.findById(id)
+                .orElseThrow(() -> new ProfesorNotFoundException(id));
+
+        return disciplinaRepository.findByIdTitular(profesor)
+                .stream()
+                .map(assemblerDisciplina::toModel)
+                .toList();
+    }
+
 }

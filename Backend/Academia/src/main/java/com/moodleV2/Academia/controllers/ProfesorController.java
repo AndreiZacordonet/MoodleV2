@@ -1,6 +1,8 @@
 package com.moodleV2.Academia.controllers;
 
+import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.ProfesorDto;
+import com.moodleV2.Academia.exceptions.InvalidFieldException;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
 import com.moodleV2.Academia.exceptions.ProfesorArchivedException;
 import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
@@ -45,9 +47,28 @@ public class ProfesorController {
         this.service = service;
     }
 
+    /**
+     * Retrieves a paginated list of professors with optional filtering and sorting criteria.
+     *
+     * @param pageable Pagination details, including page number, size, and sorting criteria.<br>
+     *                 - page: Page number, starting from 0 (default 0).<br>
+     *                 - size: Number of items per page (default 20).<br>
+     *                 - sort: Sorting criteria, e.g., "nume,asc".
+     * @param nume Filter by professor's last name. Partial matches are allowed, and the search is case-insensitive.
+     * @param prenume Filter by professor's first name. Partial matches are allowed, and the search is case-insensitive.
+     * @param email Filter by professor's email address. Must be a valid email format.
+     * @param grad Filter by professor's academic rank. Possible values:<br>
+     *             - ASISTENT, SEF_LUCRARI, CONFERENTIAR, PROFESOR.
+     * @param asociere Filter by professor's association type. Possible values:<br>
+     *                 - TITULAR, ASOCIAT, EXTERN.
+     * @param codDisciplina Filter by the unique code of the class taught by the professor.
+     * @param numeDisciplina Filter by the name of the class taught by the professor.
+     * @return A paginated response containing a list of professors as {@code ProfesorDto} objects, along with pagination metadata
+     *         and navigation links for previous, next, first, and last pages.
+     */
     @GetMapping("/profesori")
-    @Operation(summary = "Get all profesori with pagination",
-            description = "Retrieve a paginated list of profesori resources.")
+    @Operation(summary = "Retrieve all professors information.",
+            description = "Specific filtering can be applied, the result is shown in a page based on selected preferences.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
             @ApiResponse(responseCode = "416", description = "Pagination parameters not in range"),
@@ -70,9 +91,9 @@ public class ProfesorController {
                              @RequestParam(name = "grad", required = false) Grad grad,
                              @RequestParam(name = "asociare", required = false) Asociere asociere,
                              @RequestParam(name = "codDisciplina", required = false) String codDisciplina,
-                             @RequestParam(name = "numeDisciplina", required = false) String numeDisciplina) {    // DONE: verificare parametri de paginare
+                             @RequestParam(name = "numeDisciplina", required = false) String numeDisciplina
+    ) {
 
-        // check pagination dimentions
         // TODO: add PROFESOR_MAX_COUNT and PROFESOR_MAX_PAGE_SIZE constants in application properties
         if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
             // default values for page and size (0, 20) override any errors like assigning a string or a negative number
@@ -80,7 +101,7 @@ public class ProfesorController {
         }
 
         // PropertyReferenceException is thrown when sorting cannot be done by the specified parameter
-        // 422 Unprocessable Content?
+        // 422 Unprocessable Content
         Page<Profesor> page = service.ProfesorSearch(pageable, nume, prenume, email, grad, asociere, codDisciplina, numeDisciplina, false);
 
         List<EntityModel<ProfesorDto>> profesori =
@@ -140,13 +161,25 @@ public class ProfesorController {
         return ResponseEntity.ok(pagedModel);
     }
 
+
+    /**
+     * Retrieves full details of a specific professor based on their unique identifier.
+     *
+     * @param id The unique identifier of the professor to be retrieved. Must be a positive integer.
+     * @return A {@code ProfesorDto} object containing detailed information about the professor,
+     *         including their name, email, academic rank, and associated disciplines.
+     * @throws ProfesorNotFoundException if no professor is found with the provided identifier.
+     * @throws IndexOutOfBoundsException if the identifier is outside the valid range.
+     */
     @GetMapping("/profesori/{id}")
-    @Operation(summary = "Retrive one professor", description = "Retrive one professor by its id")
+    @Operation(summary = "Retrieve ONE professor full informations.",
+            description = "Searches by the provided professor-code.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
-            @ApiResponse(responseCode = "404", description = "Profesor not found"),
+            @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
+    @Parameter(name = "id", description = "Professor unique code", example = "2")
     ResponseEntity<?> getById(@PathVariable Long id) {
 
         if (id > 1000 || id < 0) {
@@ -164,15 +197,24 @@ public class ProfesorController {
         return ResponseEntity.ok(assembler.toModel(profesor));
     }
 
+
+    /**
+     * Creates a new professor in the system.
+     *
+     * @param newProfesor A {@code ProfesorDto} object containing the details of the professor to be created.<br>
+     *                    Must include valid values for name, email, academic rank, and association type.
+     * @return The created {@code ProfesorDto} object wrapped in an {@code EntityModel}, along with a {@code 201 Created} status
+     *         and a link to the newly created resource.
+     * @throws InvalidFieldException if the provided data is incomplete or invalid.
+     */
     @PostMapping("/profesori")
-    @Operation(summary = "Create a new Profesor", description = "Creates a new profesor using the provided DTO")
+    @Operation(summary = "Create a new professor.",
+            description = "Using the sent data, checks for its correctness and proceeds to create and store the new professor.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Professor created successfully", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
-            @ApiResponse(responseCode = "422", description = "Profesor data is invalid")
+            @ApiResponse(responseCode = "422", description = "Professor data is invalid")
     })
     ResponseEntity<?> createNew(@Valid @RequestBody ProfesorDto newProfesor) {
-        // DONE: profesor data validation
-        // DONE: check if profesor already exists (check email)
 
         EntityModel<ProfesorDto> profesorEntityModel = service.AddProfesor(newProfesor);
 
@@ -181,22 +223,24 @@ public class ProfesorController {
     }
 
 
-
     /**
-     * Archives a teacher by its Id. <br/>
-     * If the teacher is already archived throws an error <br/>
-     * This endpoint is only accessible to admins.
-     * @param id
-     * @return {@code Profesor DTO} incapsulated in a {@code ResponseEntity}
+     * Archives a professor by their unique identifier, marking them as inactive.
+     *
+     * @param id The unique identifier of the professor to be archived. Must be a positive integer.
+     * @return A confirmation of the archival operation, including the updated professor details as a {@code ProfesorDto}.
+     * @throws ProfesorNotFoundException if no professor is found with the provided identifier.
+     * @throws ProfesorArchivedException if the professor is already archived.
+     * @throws IndexOutOfBoundsException if the identifier is outside the valid range.
      */
     @DeleteMapping("/profesori/{id}")
-    @Operation(summary = "Archives one professor", description = "Archives one professor by its id")
+    @Operation(summary = "Archives a specified professor.",
+            description = "Using the provided code, it will switch the archive flag thus marking it as being archived.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully archived"),
-            @ApiResponse(responseCode = "404", description = "Profesor not found"),
+            @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
-    @Parameter(name = "id", description = "Professor ID to be archived", example = "123")
+    @Parameter(name = "id", description = "Professor unique code", example = "2")
     ResponseEntity<?> archiveById(@PathVariable Long id) {
 
         if (id > 1000 || id < 0) {
@@ -218,15 +262,32 @@ public class ProfesorController {
     }
 
 
-    @PatchMapping("/profesori/update/{id}")
-    @Operation(summary = "Update a professor", description = "Updates one or more fields of a professor")
+    /**
+     * Partially updates the details of a specific professor.
+     *
+     * @param id The unique identifier of the professor to be updated. Must be a positive integer.
+     * @param fields A map of fields to be updated. Only the provided fields will be modified.<br>
+     *               Example of valid fields:<br>
+     *               - "nume": Updated last name.<br>
+     *               - "prenume": Updated first name.<br>
+     *               - "email": Updated email address.<br>
+     *               - "gradDidactic": Updated academic rank.<br>
+     *               - "tipAsociere": Updated association type.<br>
+     *               - "afiliere": Updated affiliation.
+     * @return The updated {@code ProfesorDto} object as an {@code EntityModel}.
+     * @throws ProfesorNotFoundException if no professor is found with the provided identifier.
+     * @throws InvalidFieldException if the provided fields are invalid.
+     */
+    @PatchMapping("/profesori/{id}")
+    @Operation(summary = "Updates specified professor data.",
+            description = "Provided fields, if syntactically and logically correct, will be updated.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
-            @ApiResponse(responseCode = "404", description = "Profesor not found"),
+            @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier"),
-            @ApiResponse(responseCode = "422", description = "Profesor data is invalid")
+            @ApiResponse(responseCode = "422", description = "Professor data is invalid")
     })
-    @Parameter(name = "id", description = "Professor ID to be updated", example = "123")
+    @Parameter(name = "id", description = "Professor unique code", example = "2")
     @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Fields to be updated. Only the provided fields will be modified.",
             content = @Content(
                     mediaType = "application/json",
@@ -253,24 +314,24 @@ public class ProfesorController {
     }
 
 
-    // DONE: add getArchivedProfesori endpoint
-    // DONE: add un-archived Profesor
     /**
-     * Un-Archives a teacher by its Id. <br/>
-     * Does the opposite as {@code archiveById} <br/>
-     * If the teacher is not archived throws an error <br/>
-     * This endpoint is only accessible to admins.
-     * @param id
-     * @return {@code Profesor DTO} incapsulated in a {@code ResponseEntity}
+     * Removes a professor from the archived state, marking them as active.
+     *
+     * @param id The unique identifier of the professor to be unarchived. Must be a positive integer.
+     * @return A confirmation of the unarchival operation, including the updated professor details as a {@code ProfesorDto}.
+     * @throws ProfesorNotFoundException if no professor is found with the provided identifier.
+     * @throws ProfesorArchivedException if the professor is not currently archived.
+     * @throws IndexOutOfBoundsException if the identifier is outside the valid range.
      */
     @PostMapping("/profesori/{id}/activate")
-    @Operation(summary = "Un-Archives one professor", description = "Un-Archives one professor by its id")
+    @Operation(summary = "Removes specified professor from archive.",
+            description = "If the provided code is correct, marks the course as being active by switching the archive flag.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
-            @ApiResponse(responseCode = "404", description = "Profesor not found"),
+            @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
-    @Parameter(name = "id", description = "Professor ID to be un-archived", example = "123")
+    @Parameter(name = "id", description = "Professor unique code", example = "2")
     ResponseEntity<?> removeFromArchiveById(@PathVariable Long id) {
 
         if (id > 1000 || id < 0) {
@@ -293,20 +354,27 @@ public class ProfesorController {
 
 
     /**
-     * Retrives all archived teachers <br>
-     * The endpoint is only accessible to admins.
-     * @param pageable
-     * @param nume
-     * @param prenume
-     * @param email
-     * @param grad
-     * @param asociere
-     * @param codDisciplina
-     * @param numeDisciplina
-     * @return {@code Profesor DTO list} incapsulated in a {@code ResponseEntity}
+     * Retrieves a paginated list of archived professors with optional filtering and sorting criteria.
+     *
+     * @param pageable Pagination details, including page number, size, and sorting criteria.<br>
+     *                 - page: Page number, starting from 0 (default 0).<br>
+     *                 - size: Number of items per page (default 20).<br>
+     *                 - sort: Sorting criteria, e.g., "nume,asc".
+     * @param nume Filter by professor's last name. Partial matches are allowed, and the search is case-insensitive.
+     * @param prenume Filter by professor's first name. Partial matches are allowed, and the search is case-insensitive.
+     * @param email Filter by professor's email address. Must be a valid email format.
+     * @param grad Filter by professor's academic rank. Possible values:<br>
+     *             - ASISTENT, SEF_LUCRARI, CONFERENTIAR, PROFESOR.
+     * @param asociere Filter by professor's association type. Possible values:<br>
+     *                 - TITULAR, ASOCIAT, EXTERN.
+     * @param codDisciplina Filter by the unique code of the class taught by the professor.
+     * @param numeDisciplina Filter by the name of the class taught by the professor.
+     * @return A paginated response containing a list of archived professors as {@code ProfesorDto} objects, along with pagination
+     *         metadata and navigation links for previous, next, first, and last pages.
      */
     @GetMapping("/profesori/archive/")
-    @Operation(summary = "Retrives all archived professors", description = "Retrives all archived professors")
+    @Operation(summary = "Retrieve all ARCHIVED professors information.",
+            description = "Specific filtering can be applied, the result is shown in a page based on selected preferences.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
             @ApiResponse(responseCode = "416", description = "Pagination parameters not in range"),
@@ -329,9 +397,9 @@ public class ProfesorController {
                                   @RequestParam(name = "grad", required = false) Grad grad,
                                   @RequestParam(name = "asociare", required = false) Asociere asociere,
                                   @RequestParam(name = "codDisciplina", required = false) String codDisciplina,
-                                  @RequestParam(name = "numeDisciplina", required = false) String numeDisciplina) {    // DONE: verificare parametri de paginare
+                                  @RequestParam(name = "numeDisciplina", required = false) String numeDisciplina
+    ) {
 
-        // check page dimentions
         // TODO: add PROFESOR_MAX_COUNT and PROFESOR_MAX_PAGE_SIZE constants in application properties
         if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
             // default values for page and size (0, 20) override any errors like assigning a string or a negative number
@@ -339,7 +407,7 @@ public class ProfesorController {
         }
 
         // PropertyReferenceException is thrown when sorting cannot be done by the specified parameter
-        // 422 Unprocessable Content?
+        // 422 Unprocessable Content
         Page<Profesor> page = service.ProfesorSearch(pageable, nume, prenume, email, grad, asociere, codDisciplina, numeDisciplina, true);
 
         List<EntityModel<ProfesorDto>> profesori =
@@ -398,5 +466,28 @@ public class ProfesorController {
 
         return ResponseEntity.ok(pagedModel);
 
+    }
+
+
+    /**
+     * Retrieves all disciplines (classes) associated with a specific professor.
+     *
+     * @param id The unique identifier of the professor whose disciplines are to be retrieved. Must be a positive integer.
+     * @return A list of disciplines taught by the professor, represented as {@code DisciplinaDto} objects.
+     * @throws ProfesorNotFoundException if no professor is found with the provided identifier.
+     * @throws IndexOutOfBoundsException if the identifier is outside the valid range.
+     */
+    @GetMapping("/profesori/{id}/discipline")
+    @Operation(summary = "Retrieve courses.",
+            description = "Retrieve all courses specified by a professor identifier.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
+            @ApiResponse(responseCode = "404", description = "Professor not found"),
+            @ApiResponse(responseCode = "416", description = "Invalid identifier")
+    })
+    @Parameter(name = "id", description = "Professor unique code", example = "2")
+    ResponseEntity<?> getDiscipline(@PathVariable Long id) {
+
+        return ResponseEntity.ok(service.getDiscipline(id));
     }
 }
