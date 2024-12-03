@@ -12,6 +12,8 @@ import com.moodleV2.Academia.models.TipExaminare;
 import com.moodleV2.Academia.repositories.DisciplinaRepository;
 import com.moodleV2.Academia.service.DisciplinaService;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +25,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -160,6 +163,34 @@ public class DisciplinaController {
 
         disciplina.setArhivat(true);
         repository.save(disciplina);
+
+        return ResponseEntity.ok(assembler.toModel(disciplina));
+    }
+
+
+    @PatchMapping("/discipline/{code}")
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Fields to be updated. Only the provided fields will be modified.",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(example = """
+                        {
+                          "nume": "Updated Nume",
+                          "anStudiu": "4",
+                          "emailTitular": "updated.email@example.com",
+                          "tipDisciplina": "OPTIONALA",
+                          "categorie": "ADIACENTA",
+                          "tipExaminare": "EXAMEN"
+                        }
+                        """)
+            ))
+    ResponseEntity<?> partialUpdate(@PathVariable String code, @RequestBody Map<String, String> fields) {
+
+        // TODO: isBlanck validations to all strings?
+        if (code.isEmpty() || code.length() > 20) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Disciplina disciplina = service.partialUpdateDisciplina(code, fields);
 
         return ResponseEntity.ok(assembler.toModel(disciplina));
     }

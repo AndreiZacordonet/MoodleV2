@@ -4,6 +4,7 @@ import com.moodleV2.Academia.controllers.DisciplinaModelAssembler;
 import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.DisciplinaDtoCreateNew;
 import com.moodleV2.Academia.dto.ProfesorDto;
+import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
 import com.moodleV2.Academia.exceptions.InvalidFieldException;
 import com.moodleV2.Academia.exceptions.SearchParamException;
 import com.moodleV2.Academia.models.*;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import javax.naming.InvalidNameException;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class DisciplinaService {
@@ -192,4 +194,78 @@ public class DisciplinaService {
         )));
     }
 
+    public Disciplina partialUpdateDisciplina(String cod, Map<String, String> fields) {
+
+        Disciplina disciplina = disciplinaRepository.findById(cod)
+                .orElseThrow(() -> new DisciplinaNotFoundException(cod));
+
+        if (disciplina.isArhivat()) {
+            throw new DisciplinaNotFoundException(cod);
+        }
+
+        fields.forEach((fieldName, value) -> {
+            switch (fieldName) {
+                case "nume" -> {
+                    if (value.length() > 20 || value.isEmpty()) {
+                        throw new InvalidFieldException("Codul este invalid");
+                    }
+                    disciplina.setNumeDisciplina(value);
+                }
+                case "emailTitular" -> {
+                    EmailValidator emailValidator = new EmailValidator();
+                    if (value.length() > 50 || !emailValidator.isValid(value, null)) {
+                        throw new InvalidFieldException("Emailul este invalid");
+                    }
+                    Profesor profesor = profesorRepository.findFirstByEmail(value);
+
+                    if (profesor == null) {
+                        throw new InvalidFieldException("Profesorul cu emailul {" + value + "} nu a fost gasit");
+                    }
+
+                    disciplina.setIdTitular(profesor);
+                }
+                case "anStudiu" -> {
+                    try {
+                        int an = Integer.parseInt(value);
+                        if (an < 1 || an > 5) {
+                            throw new InvalidFieldException("Anul de studiul al disciplinei este invalid.");
+                        }
+                        disciplina.setAnStudiu(an);
+                    }
+                    catch (RuntimeException exception) {
+                        throw new InvalidFieldException("Anul de studiul al disciplinei este invalid.");
+                    }
+                }
+                case "tipDisciplina" -> {
+                    try {
+                        TipDisciplina tipDisciplina = TipDisciplina.valueOf(value.toUpperCase());
+                        disciplina.setTipDisciplina(tipDisciplina);
+                    } catch (IllegalArgumentException e) {
+                        throw new InvalidFieldException("Tipul disciplinei este invalid");
+                    }
+                }
+                case "categorie" -> {
+                    try {
+                        Categorie categorie = Categorie.valueOf(value.toUpperCase());
+                        disciplina.setCategorie(categorie);
+                    } catch (IllegalArgumentException e) {
+                        throw new InvalidFieldException("Categoria este invalida");
+                    }
+                }
+                case "tipExaminare" -> {
+                    try {
+                        TipExaminare tipExaminare = TipExaminare.valueOf(value.toUpperCase());
+                        disciplina.setTipExaminare(tipExaminare);
+                    } catch (IllegalArgumentException e) {
+                        throw new InvalidFieldException("Tipul examinarii este invalid");
+                    }
+                }
+                default -> throw new InvalidFieldException("Câmpul " + fieldName + " nu este valid");
+            }
+        });
+
+        disciplinaRepository.save(disciplina);
+
+        return disciplina;
+    }
 }
