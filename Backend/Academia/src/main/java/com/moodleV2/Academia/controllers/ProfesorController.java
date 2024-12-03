@@ -490,4 +490,9 @@ public class ProfesorController {
 
         return ResponseEntity.ok(service.getDiscipline(id));
     }
+
+    
+    // TODO: get all students?
+
+    // TODO: get all student by course?
 }
