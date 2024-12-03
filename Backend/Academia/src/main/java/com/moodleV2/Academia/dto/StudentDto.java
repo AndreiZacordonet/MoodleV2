@@ -63,8 +63,26 @@ public class StudentDto {
         this.classes = classes;
     }
 
+    public StudentDto(Student student) {
+        this.nume = student.getNume();
+        this.prenume = student.getPrenume();
+        this.email = student.getEmail();
+        this.cicluStudii = student.getCicluStudii();
+        this.anStudiu = student.getAnStudiu();
+        this.grupa = student.getGrupa();
+        this.classes = student.getClasses().stream().map(disciplina -> new DisciplinaDto(
+                disciplina.getCod(),
+                new ProfesorDto(disciplina.getIdTitular()),
+                disciplina.getNumeDisciplina(),
+                disciplina.getAnStudiu(),
+                disciplina.getTipDisciplina(),
+                disciplina.getCategorie(),
+                disciplina.getTipExaminare()
+        )).collect(Collectors.toSet());
+    }
+
     public Student StudentMapper() {
-        Student stundent = new Student(
+        Student student = new Student(
                 this.nume,
                 this.prenume,
                 this.email,
@@ -73,8 +91,8 @@ public class StudentDto {
                 this.grupa
         );
         if (this.classes != null) {
-            stundent.getClasses().addAll(this.classes.stream().map(DisciplinaDto::DisciplinaMapper).collect(Collectors.toSet()));
+            student.getClasses().addAll(this.classes.stream().map(DisciplinaDto::DisciplinaMapper).collect(Collectors.toSet()));
         }
-        return stundent;
+        return student;
     }
 }
