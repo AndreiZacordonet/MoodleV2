@@ -194,4 +194,26 @@ public class DisciplinaController {
 
         return ResponseEntity.ok(assembler.toModel(disciplina));
     }
+
+
+    @PostMapping("/discipline/{code}/activate")
+    ResponseEntity<?> removeFromArchiveByCode(@PathVariable String code) {
+
+        if (code.isEmpty() || code.length() > 20) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Disciplina disciplina = repository.findById(code)
+                .orElseThrow(() -> new DisciplinaNotFoundException(code));
+
+        if (!disciplina.isArhivat()) {
+            throw new DisciplinaArchivedException("Class with code " + code + " is NOT archived");
+        }
+
+        disciplina.setArhivat(false);
+        repository.save(disciplina);
+
+        return ResponseEntity.ok(assembler.toModel(disciplina));
+    }
+
 }
