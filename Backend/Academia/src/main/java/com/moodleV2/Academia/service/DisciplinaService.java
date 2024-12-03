@@ -1,6 +1,10 @@
 package com.moodleV2.Academia.service;
 
 import com.moodleV2.Academia.controllers.DisciplinaModelAssembler;
+import com.moodleV2.Academia.dto.DisciplinaDto;
+import com.moodleV2.Academia.dto.DisciplinaDtoCreateNew;
+import com.moodleV2.Academia.dto.ProfesorDto;
+import com.moodleV2.Academia.exceptions.InvalidFieldException;
 import com.moodleV2.Academia.exceptions.SearchParamException;
 import com.moodleV2.Academia.models.*;
 import com.moodleV2.Academia.repositories.DisciplinaRepository;
@@ -10,8 +14,10 @@ import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Service;
 
+import javax.naming.InvalidNameException;
 import java.util.List;
 
 @Service
@@ -144,4 +150,46 @@ public class DisciplinaService {
     public static Specification<Profesor> arhivareEquals(boolean arhivat) {
         return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("arhivat"), arhivat);
     }
+
+    public EntityModel<DisciplinaDto> addDisciplina(DisciplinaDtoCreateNew disciplinaDto) {
+
+        String cod = disciplinaDto.getCod();
+        String nume = disciplinaDto.getNumeDisciplina();
+        String emailTitular = disciplinaDto.getEmailTitular();
+        int anStudiu = disciplinaDto.getAnStudiu();
+        TipDisciplina tipDisciplina = disciplinaDto.getTipDisciplina();
+        Categorie categorie = disciplinaDto.getCategorie();
+        TipExaminare tipExaminare = disciplinaDto.getTipExaminare();
+
+        if (cod.length() > 20 || cod.isEmpty()) {
+            throw new InvalidFieldException("Codul este invalid");
+        }
+        if (nume.length() > 100 || nume.length() < 2) {
+            throw new InvalidFieldException("Numele disciplinei este invalid");
+        }
+        if (anStudiu < 1 || anStudiu > 5) {
+            throw new InvalidFieldException("Anul de studiul al disciplinei este invalid.");
+        }
+        EmailValidator emailValidator = new EmailValidator();
+        if (emailTitular.length() > 50 || !emailValidator.isValid(emailTitular, null)) {
+            throw new InvalidFieldException("Emailul este invalid");
+        }
+
+        Profesor profesor = profesorRepository.findFirstByEmail(emailTitular);
+
+        if (profesor == null) {
+            throw new InvalidFieldException("Profesorul cu emailul {" + emailTitular + "} nu a fost gasit");
+        }
+
+        return assembler.toModel(disciplinaRepository.save(new Disciplina(
+                cod,
+                profesor,
+                nume,
+                anStudiu,
+                tipDisciplina,
+                categorie,
+                tipExaminare
+        )));
+    }
+
 }

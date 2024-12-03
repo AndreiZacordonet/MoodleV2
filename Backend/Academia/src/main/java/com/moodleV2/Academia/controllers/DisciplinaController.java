@@ -1,6 +1,7 @@
 package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.DisciplinaDto;
+import com.moodleV2.Academia.dto.DisciplinaDtoCreateNew;
 import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
 import com.moodleV2.Academia.models.Categorie;
@@ -10,9 +11,11 @@ import com.moodleV2.Academia.models.TipExaminare;
 import com.moodleV2.Academia.repositories.DisciplinaRepository;
 import com.moodleV2.Academia.service.DisciplinaService;
 import io.swagger.v3.oas.annotations.Parameter;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
@@ -114,6 +117,7 @@ public class DisciplinaController {
         return ResponseEntity.ok(pagedModel);
     }
 
+
     @GetMapping("/discipline/{code}")
     ResponseEntity<?> getByCode(@PathVariable String code) {
 
@@ -125,5 +129,15 @@ public class DisciplinaController {
         }
 
         return ResponseEntity.ok(assembler.toModel(disciplina));
+    }
+
+
+    @PutMapping("/discipline")
+    ResponseEntity<?> createNew(@Valid @RequestBody DisciplinaDtoCreateNew newDisciplina) {
+
+        EntityModel<DisciplinaDto> disciplinaDtoEntityModel = service.addDisciplina(newDisciplina);
+
+        return ResponseEntity.created(disciplinaDtoEntityModel.getRequiredLink(IanaLinkRelations.SELF)
+                .toUri()).body(disciplinaDtoEntityModel);
     }
 }
