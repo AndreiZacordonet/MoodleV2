@@ -69,9 +69,9 @@ public class DisciplinaService {
                 numeContains(n)
                         .or(prenumeContains(p))
                         .and(emailContains(emailTitular))
-                        .and(arhivareEquals(fromArchive))
-                ));
-        if (profesorList.isEmpty()) {
+//                        .and(arhivareEquals(fromArchive))
+        ));
+        if (profesorList.isEmpty() && (n != null || p != null || emailTitular != null)) {
             return Page.empty(pageable);
         }
 
