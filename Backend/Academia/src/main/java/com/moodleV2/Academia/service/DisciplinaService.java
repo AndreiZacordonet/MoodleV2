@@ -27,7 +27,7 @@ public class DisciplinaService {
         this.profesorRepository = profesorRepository;
     }
 
-    public Page<Disciplina> DisciplinaSearch(Pageable pageable,
+    public Page<Disciplina> disciplinaSearch(Pageable pageable,
                                              String cod, String nume, Integer anStudiu, TipDisciplina tipDisciplina, Categorie categorie, TipExaminare tipExaminare, String numePrenumeTitular, String emailTitular, boolean fromArchive) {
 
         // validari
@@ -62,7 +62,7 @@ public class DisciplinaService {
                         .or(prenumeContains(p))
                         .and(emailContains(emailTitular))
                         .and(arhivareEquals(fromArchive))
-        ));
+                ));
         if (profesorList.isEmpty()) {
             return Page.empty(pageable);
         }

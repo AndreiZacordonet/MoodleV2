@@ -56,7 +56,7 @@ public class DisciplinaController {
             throw new LengthPaginationException();
         }
 
-        Page<Disciplina> page = service.DisciplinaSearch(pageable, cod, nume, anStudiu, tipDisciplina, categorie, tipExaminare, numePrenumeTitular, emailTitular, false);
+        Page<Disciplina> page = service.disciplinaSearch(pageable, cod, nume, anStudiu, tipDisciplina, categorie, tipExaminare, numePrenumeTitular, emailTitular, false);
 
         List<EntityModel<DisciplinaDto>> discipline = page.getContent().stream()
                 .map(assembler::toModel)
@@ -120,6 +120,9 @@ public class DisciplinaController {
         Disciplina disciplina = repository.findById(code)
                 .orElseThrow(() -> new DisciplinaNotFoundException(code));
 
+        if (disciplina.isArhivat()) {
+            throw new DisciplinaNotFoundException(code);
+        }
 
         return ResponseEntity.ok(assembler.toModel(disciplina));
     }
