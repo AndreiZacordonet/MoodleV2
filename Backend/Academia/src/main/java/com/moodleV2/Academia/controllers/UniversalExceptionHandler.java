@@ -115,7 +115,7 @@ public class UniversalExceptionHandler {
         content.put("afiliere", "afiliere maxima");
         examples.put("ProfesorDto", content);
 
-        content.clear();
+        content = new LinkedHashMap<>();
         content.put("cod", "MATH69");
         content.put("idTitular", 2);
         content.put("numeDisciplina", "Matematica amuzanta");
@@ -125,7 +125,7 @@ public class UniversalExceptionHandler {
         content.put("tipExaminare", "COLOCVIU");
         examples.put("DisciplinaDto", content);
 
-        content.clear();
+        content = new LinkedHashMap<>();
         content.put("nume", "MIrcea");
         content.put("prenume", "CelBatran");
         content.put("email", "mircea@elbatran.io");
@@ -140,5 +140,10 @@ public class UniversalExceptionHandler {
         body.put("_links", links.getLinks());
 
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(body);
+    }
+
+    @ExceptionHandler(ResourceAlreadyExistsException.class)
+    public ResponseEntity<?> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex, HttpServletRequest request) {
+        return bodyBuild(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
     }
 }
