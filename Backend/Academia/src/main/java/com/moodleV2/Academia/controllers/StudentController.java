@@ -2,6 +2,7 @@ package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.StudentDto;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
+import com.moodleV2.Academia.models.Ciclu;
 import com.moodleV2.Academia.models.Student;
 import com.moodleV2.Academia.service.StudentService;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -11,6 +12,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import org.springframework.data.domain.Page;
@@ -38,14 +40,21 @@ public class StudentController {
     @Parameter(name = "page", description = "Page number, starting at 0", example = "0")
     @Parameter(name = "size", description = "Number of items per page", example = "10")
     @Parameter(name = "sort", description = "Sort criteria: nume, prenume, email, cicluStudii, anStudiu, grupa, asc, desc", example = "nume,asc")
-    ResponseEntity<?> getAll(Pageable pageable) {
+    ResponseEntity<?> getAll(Pageable pageable,
+                             @RequestParam(name = "nume", required = false) String nume,
+                             @RequestParam(name = "prenume", required = false) String prenume,
+                             @RequestParam(name = "email", required = false) String email,
+                             @RequestParam(name = "ciclu", required = false) Ciclu ciclu,
+                             @RequestParam(name = "an", required = false) Integer an,
+                             @RequestParam(name = "grupa", required = false) Integer grupa
+                             ) {
 
         if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
             // default values for page and size (0, 20) override any errors like assigning a string or a negative number
             throw new LengthPaginationException();
         }
 
-        Page<Student> page = service.studentSearch(pageable);
+        Page<Student> page = service.studentSearch(pageable, nume, prenume, email, ciclu, an, grupa, false);
 
         List<EntityModel<StudentDto>> studenti =
                 page.getContent().stream()
@@ -60,7 +69,7 @@ public class StudentController {
                         page.getTotalElements(),
                         page.getTotalPages()
                 ),
-                Link.of(linkTo(methodOn(StudentController.class).getAll(pageable)).toUriComponentsBuilder()
+                Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa)).toUriComponentsBuilder()
                                 .queryParam("page", page.getNumber())
                                 .queryParam("size", page.getSize())
                                 .toUriString())
@@ -68,7 +77,7 @@ public class StudentController {
         );
 
         if (page.hasPrevious()) {
-            pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable)).toUriComponentsBuilder()
+            pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa)).toUriComponentsBuilder()
                             .queryParam("page",pageable.getPageNumber() - 1)
                             .queryParam("size", pageable.getPageSize())
                             .toUriString())
@@ -77,7 +86,7 @@ public class StudentController {
         }
 
         if (page.hasNext()) {
-            pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable)).toUriComponentsBuilder()
+            pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa)).toUriComponentsBuilder()
                             .queryParam("page",pageable.getPageNumber() + 1)
                             .queryParam("size", pageable.getPageSize())
                             .toUriString())
@@ -86,7 +95,7 @@ public class StudentController {
         }
 
         // adding first page link
-        pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable)).toUriComponentsBuilder()
+        pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa)).toUriComponentsBuilder()
                         .queryParam("page",0)
                         .queryParam("size", pageable.getPageSize())
                         .toUriString())
@@ -94,7 +103,7 @@ public class StudentController {
         );
 
         // adding last page link
-        pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable)).toUriComponentsBuilder()
+        pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa)).toUriComponentsBuilder()
                         .queryParam("page",page.getTotalPages() - 1)
                         .queryParam("size", pageable.getPageSize())
                         .toUriString())
