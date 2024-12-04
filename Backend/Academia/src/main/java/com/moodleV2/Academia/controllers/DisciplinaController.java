@@ -2,7 +2,6 @@ package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.DisciplinaDtoCreateNew;
-import com.moodleV2.Academia.dto.ProfesorDto;
 import com.moodleV2.Academia.exceptions.DisciplinaArchivedException;
 import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
 import com.moodleV2.Academia.exceptions.InvalidFieldException;
@@ -95,7 +94,8 @@ public class DisciplinaController {
                              @RequestParam(name = "categorie", required = false) Categorie categorie,
                              @RequestParam(name = "tipExaminare", required = false) TipExaminare tipExaminare,
                              @RequestParam(name = "numePrenumeTitular", required = false) String numePrenumeTitular,
-                             @RequestParam(name = "emailTitular", required = false) String emailTitular) {
+                             @RequestParam(name = "emailTitular", required = false) String emailTitular
+    ) {
 
         if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
             // default values for page and size (0, 20) override any errors like assigning a string or a negative number
@@ -288,7 +288,7 @@ public class DisciplinaController {
                         {
                           "nume": "Updated Nume",
                           "anStudiu": "4",
-                          "emailTitular": "updated.email@example.com",
+                          "idTitular": "2",
                           "tipDisciplina": "OPTIONALA",
                           "categorie": "ADIACENTA",
                           "tipExaminare": "EXAMEN"
@@ -389,7 +389,8 @@ public class DisciplinaController {
                              @RequestParam(name = "categorie", required = false) Categorie categorie,
                              @RequestParam(name = "tipExaminare", required = false) TipExaminare tipExaminare,
                              @RequestParam(name = "numePrenumeTitular", required = false) String numePrenumeTitular,
-                             @RequestParam(name = "emailTitular", required = false) String emailTitular) {
+                             @RequestParam(name = "emailTitular", required = false) String emailTitular
+    ) {
 
         if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
             // default values for page and size (0, 20) override any errors like assigning a string or a negative number
