@@ -4,60 +4,51 @@ import com.moodleV2.Academia.models.Asociere;
 import com.moodleV2.Academia.models.Grad;
 import com.moodleV2.Academia.models.Profesor;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
-import lombok.NonNull;
+import lombok.Setter;
 
 @Schema(description = "DTO for creating or updating Profesor")
 @Getter
+@Setter
 public class ProfesorDto {
 
-    @Schema(description = "Nume Profesor", example = "Zaco", required = true)
-    @NonNull
+    @Schema(description = "Id Profesor", example = "2", accessMode = Schema.AccessMode.READ_ONLY)
+    private Long id;
+
+    @Schema(description = "Nume Profesor", example = "Zaco", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "Professor's last name MUST NOT be null.")
     @Size(min = 1, max = 50)
     private String nume;
 
-    @Schema(description = "Prenume Profesor", example = "Andrei", required = true)
-    @NonNull
+    @Schema(description = "Prenume Profesor", example = "Andrei", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "Professor's first name MUST NOT be null.")
     @Size(min = 1, max = 50)
     private String prenume;
 
-    @Schema(description = "Email Profesor", example = "andrei74c0@gmail.com", required = true)
-    @NonNull
+    @Schema(description = "Email Profesor", example = "andrei74c0@gmail.com", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "Professor's email MUST NOT be null.")
     @Email
     private String email;
 
-    @Schema(description = "Grad Profesor", example = "ASISTENT", required = true
-//            allowableValues = {"ASISTENT", "SEF_LUCRARI", "CONFERENTIAR", "PROFESOR"}
-    )
-    @NonNull
+    @Schema(description = "Grad Profesor", example = "ASISTENT", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "Professor's didactic grade MUST NOT be null.")
     private Grad gradDidactic;
 
-    @Schema(description = "Asociere Profesor", example = "TITULAR", required = true
-//            allowableValues = {"TITULAR", "ASOCIAT", "EXTERN"}
-    )
-    @NonNull
+    @Schema(description = "Asociere Profesor", example = "TITULAR", requiredMode = Schema.RequiredMode.REQUIRED)
+    @NotNull(message = "Professor's association MUST NOT be null.")
     private Asociere tipAsociere;
 
-    @Schema(description = "Afiliere Profesor", example = "afiliere amxima", required = false)
-    @NonNull
+    @Schema(description = "Afiliere Profesor", example = "afiliere maxima")
     @Size(max = 50)
     private String afiliere;
 
     public ProfesorDto() {}
 
-    public ProfesorDto(String nume, String prenume, String email, Grad gradDidactic, Asociere tipAsociere, String afiliere) {
-        this.nume = nume;
-        this.prenume = prenume;
-        this.email = email;
-        this.gradDidactic = gradDidactic;
-        this.tipAsociere = tipAsociere;
-        this.afiliere = afiliere;
-    }
-
     public ProfesorDto(Profesor profesor) {
+        this.id = profesor.getId();
         this.nume = profesor.getNume();
         this.prenume = profesor.getPrenume();
         this.email = profesor.getEmail();
