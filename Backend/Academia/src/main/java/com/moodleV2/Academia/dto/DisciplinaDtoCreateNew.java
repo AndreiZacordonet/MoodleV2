@@ -18,7 +18,7 @@ public class DisciplinaDtoCreateNew {
     @Size(min = 1, max = 20)
     private String cod;
 
-    @Schema(description = "Titularul disciplinei", example = "pingu@cimiceanga.com", requiredMode = Schema.RequiredMode.REQUIRED)
+    @Schema(description = "Titularul disciplinei", example = "10", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     private Long idTitular;
 
@@ -30,7 +30,7 @@ public class DisciplinaDtoCreateNew {
     @Schema(description = "Anul in care se studiaza disciplina", example = "2", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     @Min(1)
-    @Max(5)
+    @Max(4)
     private int anStudiu;
 
     @Schema(description = "Tipul disciplinei", example = "IMPUSA", requiredMode = Schema.RequiredMode.REQUIRED)

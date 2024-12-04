@@ -34,7 +34,7 @@ public class DisciplinaDto {
     @Schema(description = "Anul in care se studiaza disciplina", example = "2", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     @Min(1)
-    @Max(5)
+    @Max(4)
     private int anStudiu;
 
     @Schema(description = "Tipul disciplinei", example = "IMPUSA", requiredMode = Schema.RequiredMode.REQUIRED)
