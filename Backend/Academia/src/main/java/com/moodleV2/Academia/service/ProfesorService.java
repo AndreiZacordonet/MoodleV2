@@ -4,10 +4,7 @@ import com.moodleV2.Academia.controllers.DisciplinaModelAssembler;
 import com.moodleV2.Academia.controllers.ProfesorModelAssembler;
 import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.ProfesorDto;
-import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
-import com.moodleV2.Academia.exceptions.InvalidFieldException;
-import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
-import com.moodleV2.Academia.exceptions.SearchParamException;
+import com.moodleV2.Academia.exceptions.*;
 import com.moodleV2.Academia.models.Asociere;
 import com.moodleV2.Academia.models.Disciplina;
 import com.moodleV2.Academia.models.Grad;
@@ -23,6 +20,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+
+import static com.moodleV2.Academia.service.DataValidators.emailValidator;
+import static com.moodleV2.Academia.service.DataValidators.numeValidator;
 
 
 @Service
@@ -43,22 +43,21 @@ public class ProfesorService {
     public Page<Profesor> ProfesorSearch(Pageable pageable,
                                          String nume, String prenume, String email, Grad grad, Asociere asociere, String codDisciplina, String numeDisciplina, boolean fromArhive) {
 
-        if (nume != null && nume.length() > 50) {
-            throw new SearchParamException(nume);
+        numeValidator(nume, 2, 50,
+                () -> new SearchParamException("Professor last name search parameter { " + nume + " } is not valid."));
+        numeValidator(prenume, 2, 50,
+                () -> new SearchParamException("Professor first name search parameter { " + prenume + " } is not valid."));
+
+        emailValidator(email,
+                () -> new SearchParamException("Professor email search parameter { " + email + " } is not valid."));
+        if (profesorRepository.existsProfesorByEmail(email)) {
+            throw new ResourceAlreadyExistsException("Email { " + email + " } already exists.");
         }
-        if (prenume != null && prenume.length() > 50) {
-            throw new SearchParamException(prenume);
-        }
-        EmailValidator emailValidator = new EmailValidator();
-        if (email != null && (email.length() > 50 || !emailValidator.isValid(email, null))) {
-            throw new SearchParamException(email);
-        }
-        if (codDisciplina != null && codDisciplina.length() > 20) {
+        if (codDisciplina != null && (codDisciplina.length() > 20 || codDisciplina.isBlank())) {
             throw new SearchParamException(codDisciplina);
         }
-        if (numeDisciplina != null && numeDisciplina.length() > 100) {
-            throw new SearchParamException(numeDisciplina);
-        }
+        numeValidator(numeDisciplina, 1, 100,
+                () -> new SearchParamException("Course code search parameter {" + numeDisciplina + "} is not valid."));
 
         List<Long> idList = null;
         if (codDisciplina != null || numeDisciplina != null) {
@@ -148,19 +147,18 @@ public class ProfesorService {
         String email = profesorDto.getEmail();
         String afiliere = profesorDto.getAfiliere();
 
-        if (nume.length() > 50 || nume.length() < 2) {
-            throw new InvalidFieldException("Numele este invalid");
-        }
-        if (prenume.length() > 50 || prenume.length() < 2) {
-            throw new InvalidFieldException("Prenumele este invalid");
-        }
-        EmailValidator emailValidator = new EmailValidator();
-        if (email.length() > 50 || !emailValidator.isValid(email, null)
-                || profesorRepository.existsProfesorByEmail(email)) {
-            throw new InvalidFieldException("Emailul este invalid");
+        numeValidator(nume, 2, 50,
+                () -> new InvalidFieldException("Last name { " + nume + " } is not valid."));
+        numeValidator(prenume, 2, 50,
+                () -> new InvalidFieldException("First name { " + prenume + " } is not valid."));
+
+        emailValidator(email,
+                () -> new InvalidFieldException("Email { " + email + " } is not valid."));
+        if (profesorRepository.existsProfesorByEmail(email)) {
+            throw new ResourceAlreadyExistsException("Email {" + email + "} already exists.");
         }
         if (afiliere.length() > 100) {
-            throw new InvalidFieldException("Afilierea este invalidă");
+            throw new InvalidFieldException("Affiliation { " + afiliere + " } is not valid.");
         }
 
         return assembler.toModel(profesorRepository.save(profesorDto.ProfesorMapper()));
@@ -180,24 +178,22 @@ public class ProfesorService {
             switch (fieldName) {
                 case "nume" -> {
                     String nume = value;
-                    if (nume.length() > 50 || nume.length() < 2) {
-                        throw new InvalidFieldException("Numele este invalid");
-                    }
+                    numeValidator(nume, 2, 50,
+                            () -> new InvalidFieldException("Last name { " + nume + " } is not valid."));
                     profesor.setNume(nume);
                 }
                 case "prenume" -> {
                     String prenume = value;
-                    if (prenume.length() > 50 || prenume.length() < 2) {
-                        throw new InvalidFieldException("Prenumele este invalid");
-                    }
+                    numeValidator(prenume, 2, 50,
+                            () -> new InvalidFieldException("First name { " + prenume + " } is not valid."));
                     profesor.setPrenume(prenume);
                 }
                 case "email" -> {
                     String email = value;
-                    EmailValidator emailValidator = new EmailValidator();
-                    if (email.length() > 50 || !emailValidator.isValid(email, null)
-                            || profesorRepository.existsProfesorByEmail(email)) {
-                        throw new InvalidFieldException("Emailul este invalid");
+                    emailValidator(email,
+                            () -> new InvalidFieldException("Email { " + email + " } is not valid."));
+                    if (profesorRepository.existsProfesorByEmail(email)) {
+                        throw new ResourceAlreadyExistsException("Email { " + email + " } already exists.");
                     }
                     profesor.setEmail(email);
                 }
@@ -207,7 +203,7 @@ public class ProfesorService {
                         Grad gradDidactic = Grad.valueOf(gradValue.toUpperCase());
                         profesor.setGradDidactic(gradDidactic);
                     } catch (IllegalArgumentException e) {
-                        throw new InvalidFieldException("GradDidactic este invalid");
+                        throw new InvalidFieldException("Professor didactic grade { " + gradValue + " } is not valid.");
                     }
                 }
                 case "tipAsociere" -> {
@@ -216,17 +212,17 @@ public class ProfesorService {
                         Asociere tipAsociere = Asociere.valueOf(asociereValue.toUpperCase());
                         profesor.setTipAsociere(tipAsociere);
                     } catch (IllegalArgumentException e) {
-                        throw new InvalidFieldException("TipAsociere este invalid");
+                        throw new InvalidFieldException("Professor association type { " + asociereValue + " } is not valid.");
                     }
                 }
                 case "afiliere" -> {
                     String afiliere = value;
                     if (afiliere.length() > 100) {
-                        throw new InvalidFieldException("Afilierea este invalidă");
+                        throw new InvalidFieldException("Affiliation { " + afiliere + " } is not valid.");
                     }
                     profesor.setAfiliere(afiliere);
                 }
-                default -> throw new InvalidFieldException("Câmpul " + fieldName + " nu este valid");
+                default -> throw new InvalidFieldException("Field { " + fieldName + "} is not valid.");
             }
         });
 
@@ -240,7 +236,7 @@ public class ProfesorService {
         if (id > 1000 || id < 0) {
             throw new IndexOutOfBoundsException();
         }
-
+    // FIXME: retrive courses from all teachers
         Profesor profesor = profesorRepository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
 

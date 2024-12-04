@@ -25,6 +25,7 @@ import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -212,9 +213,10 @@ public class ProfesorController {
             description = "Using the sent data, checks for its correctness and proceeds to create and store the new professor.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Professor created successfully", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
+            @ApiResponse(responseCode = "406", description = "Parameter format is not correct"),
             @ApiResponse(responseCode = "422", description = "Professor data is invalid")
     })
-    ResponseEntity<?> createNew(@Valid @RequestBody ProfesorDto newProfesor) {
+    ResponseEntity<?> createNew(@Validated @RequestBody ProfesorDto newProfesor) {
 
         EntityModel<ProfesorDto> profesorEntityModel = service.AddProfesor(newProfesor);
 
@@ -469,6 +471,7 @@ public class ProfesorController {
     }
 
 
+    // FIXME: retrieve all courses (from all professors) instead?
     /**
      * Retrieves all disciplines (classes) associated with a specific professor.
      *
@@ -491,7 +494,7 @@ public class ProfesorController {
         return ResponseEntity.ok(service.getDiscipline(id));
     }
 
-    
+
     // TODO: get all students?
 
     // TODO: get all student by course?
