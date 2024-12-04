@@ -8,6 +8,7 @@ import org.springframework.hateoas.RepresentationModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.data.mapping.PropertyReferenceException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -93,5 +94,51 @@ public class UniversalExceptionHandler {
     @ExceptionHandler(DisciplinaArchivedException.class)
     public ResponseEntity<?> handleDisciplinaArchivedException(DisciplinaArchivedException ex, HttpServletRequest request) {
         return bodyBuild(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException ex, HttpServletRequest request) {
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("timestamp", LocalDateTime.now());
+        body.put("status", 406);
+        body.put("error", "Your target representation doesn't exist.");
+        body.put("message", "Try another representation (examples):");
+
+        Map<String, Object> examples = new LinkedHashMap<>();
+        Map<String, Object> content = new LinkedHashMap<>();
+        content.put("nume", "Zaco");
+        content.put("prenume", "Andrei");
+        content.put("email", "andreiqwe@gmail.com");
+        content.put("gradDidactic", "ASISTENT");
+        content.put("tipAsociere", "TITULAR");
+        content.put("afiliere", "afiliere maxima");
+        examples.put("ProfesorDto", content);
+
+        content.clear();
+        content.put("cod", "MATH69");
+        content.put("idTitular", 2);
+        content.put("numeDisciplina", "Matematica amuzanta");
+        content.put("anStudiu", 2);
+        content.put("tipDisciplina", "IMPUSA");
+        content.put("categorie", "SPECIALITATE");
+        content.put("tipExaminare", "COLOCVIU");
+        examples.put("DisciplinaDto", content);
+
+        content.clear();
+        content.put("nume", "MIrcea");
+        content.put("prenume", "CelBatran");
+        content.put("email", "mircea@elbatran.io");
+        content.put("cicluStudii", "MASTER");
+        content.put("anStudiu", 2);
+        content.put("grupa", 12);
+        examples.put("StudentDto", content);
+
+        body.put("examples", examples);
+        body.put("path", request.getQueryString() == null ? request.getRequestURI() : request.getRequestURI() + "?" +
+                request.getQueryString());
+        body.put("_links", links.getLinks());
+
+        return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(body);
     }
 }
