@@ -12,5 +12,5 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface ProfesorRepository extends JpaRepository<Profesor, Long>, JpaSpecificationExecutor<Profesor> {
     boolean existsProfesorByEmail(String email);
 
-    Profesor findFirstByEmail(String email);
+    Profesor getDistinctById(Long idTitular);
 }
