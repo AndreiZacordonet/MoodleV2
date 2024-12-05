@@ -145,6 +145,27 @@ public class StudentController {
                 .toUri()).body(studentEntityModel);
     }
 
+
+    @DeleteMapping("studenti/{id}")
+    ResponseEntity<?> archiveById(@PathVariable Long id) {
+
+        if (id > 10000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Student student = repository.findById(id)
+                .orElseThrow(() -> new StudentNotFoundException("Student with id { " + id + " } was not found."));
+
+        if (student.isArhivat()) {
+            throw new StudentNotFoundException("Student with id { " + id + " } was not found.");
+        }
+
+        student.setArhivat(true);
+        repository.save(student);
+
+        return ResponseEntity.ok(assembler.toModel(student));
+    }
+
     // TODO: get student courses
 
 }
