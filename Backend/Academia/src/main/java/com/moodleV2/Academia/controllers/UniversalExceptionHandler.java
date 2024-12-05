@@ -148,8 +148,12 @@ public class UniversalExceptionHandler {
     }
 
     @ExceptionHandler(StudentNotFoundException.class)
-    public ResponseEntity<?> handlerStudentNotFoundException(StudentNotFoundException ex, HttpServletRequest request) {
+    public ResponseEntity<?> handleStudentNotFoundException(StudentNotFoundException ex, HttpServletRequest request) {
         return bodyBuild(HttpStatus.NOT_FOUND, "Student not found.", ex.getMessage(), request);
     }
 
+    @ExceptionHandler(StudentArchivedException.class)
+    public ResponseEntity<?> handleStudentArchivedException(StudentArchivedException ex, HttpServletRequest request) {
+        return bodyBuild(HttpStatus.NOT_FOUND, "Not found", ex.getMessage(), request);
+    }
 }

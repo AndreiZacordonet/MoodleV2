@@ -4,6 +4,7 @@ import com.moodleV2.Academia.dto.StudentDto;
 import com.moodleV2.Academia.dto.StudentDtoCreateNew;
 import com.moodleV2.Academia.dto.StudentDtoUpdate;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
+import com.moodleV2.Academia.exceptions.StudentArchivedException;
 import com.moodleV2.Academia.exceptions.StudentNotFoundException;
 import com.moodleV2.Academia.models.Ciclu;
 import com.moodleV2.Academia.models.Student;
@@ -181,6 +182,29 @@ public class StudentController {
 
         return ResponseEntity.ok(assembler.toModel(student));
     }
+
+
+    @PostMapping("/studenti/{id}/activate")
+    ResponseEntity<?> removeFromArchiveById(@PathVariable Long id) {
+
+        if (id > 10000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Student student = repository.findById(id)
+                .orElseThrow(() -> new StudentNotFoundException("Student with id { " + id + " } was not found."));
+
+        if (!student.isArhivat()) {
+            throw new StudentArchivedException("Student with id { " + id + " } is NOT archived.");
+        }
+
+        student.setArhivat(false);
+        repository.save(student);
+
+        return ResponseEntity.ok(assembler.toModel(student));
+    }
+
+    // TODO: getStudentiArchived
 
     // TODO: get student courses
 
