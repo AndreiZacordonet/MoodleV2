@@ -35,7 +35,7 @@ public class StudentDtoCreateNew {
     @Schema(description = "An de studiu", example = "2", requiredMode = Schema.RequiredMode.REQUIRED)
     @NotNull
     @Min(1)
-    @Max(5)
+    @Max(4)
     private int anStudiu;
 
     @Schema(description = "Grupa", example = "9", requiredMode = Schema.RequiredMode.REQUIRED)
