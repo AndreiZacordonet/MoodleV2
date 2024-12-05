@@ -4,10 +4,8 @@ import com.moodleV2.Academia.controllers.StudentModelAssembler;
 import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.StudentDto;
 import com.moodleV2.Academia.dto.StudentDtoCreateNew;
-import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
-import com.moodleV2.Academia.exceptions.InvalidFieldException;
-import com.moodleV2.Academia.exceptions.ResourceAlreadyExistsException;
-import com.moodleV2.Academia.exceptions.SearchParamException;
+import com.moodleV2.Academia.dto.StudentDtoUpdate;
+import com.moodleV2.Academia.exceptions.*;
 import com.moodleV2.Academia.models.Ciclu;
 import com.moodleV2.Academia.models.Disciplina;
 import com.moodleV2.Academia.models.Profesor;
@@ -23,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -155,5 +154,73 @@ public class StudentService {
         student.getClasses().addAll(discipline);
 
         return assembler.toModel(studentRepository.save(student));
+    }
+
+    public Student partialUpdateStudent(Long id, StudentDtoUpdate studentDto) {
+
+        String nume = studentDto.getNume();
+        String prenume = studentDto.getPrenume();
+        String email = studentDto.getEmail();
+        Integer an = studentDto.getAnStudiu();
+        Integer grupa = studentDto.getGrupa();
+        Set<String> classes = studentDto.getClasses();
+
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new StudentNotFoundException("Student with id { " + id + " } was not found."));
+
+        if (student.isArhivat()) {
+            throw new StudentNotFoundException("Student with id { " + id + " } was not found.");
+        }
+
+        if (nume != null) {
+            numeValidator(nume, 2, 50,
+                    () -> new InvalidFieldException("Last name { " + nume + " } is not valid."));
+            student.setNume(nume);
+        }
+
+        if (prenume != null) {
+            numeValidator(prenume, 2, 50,
+                    () -> new InvalidFieldException("First name { " + prenume + " } is not valid."));
+            student.setPrenume(prenume);
+        }
+
+        if (email != null) {
+            emailValidator(email,
+                    () -> new InvalidFieldException("Email { " + email + " } is not valid."));
+            if (studentRepository.existsStudentByEmail(email)) {
+                throw new ResourceAlreadyExistsException("Email {" + email + "} already exists.");
+            }
+            student.setEmail(email);
+        }
+
+        if (an != null) {
+            if (an < 1 || an > 4) {
+                throw new InvalidFieldException("Year { " + an + " } is not valid.");
+            }
+            student.setAnStudiu(an);
+        }
+
+        if (grupa != null) {
+            if (grupa < 1 || grupa > 50) {
+                throw new InvalidFieldException("Group number { " + grupa + " } is not valid.");
+            }
+            student.setGrupa(grupa);
+        }
+
+        if (classes == null || classes.isEmpty()) {
+            studentRepository.save(student);
+            return student;
+        }
+
+        Set<Disciplina> discipline = disciplinaRepository.findAllById(classes).stream().filter(disciplina -> !disciplina.isArhivat()).collect(Collectors.toSet());
+
+        if (discipline.isEmpty() || discipline.size() < classes.size()) {
+            throw new DisciplinaNotFoundException("One or more of the specified course codes was not found.");
+        }
+        student.getClasses().addAll(discipline);
+
+        studentRepository.save(student);
+
+        return student;
     }
 }

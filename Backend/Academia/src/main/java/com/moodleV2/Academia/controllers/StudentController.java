@@ -2,6 +2,7 @@ package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.StudentDto;
 import com.moodleV2.Academia.dto.StudentDtoCreateNew;
+import com.moodleV2.Academia.dto.StudentDtoUpdate;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
 import com.moodleV2.Academia.exceptions.StudentNotFoundException;
 import com.moodleV2.Academia.models.Ciclu;
@@ -9,6 +10,8 @@ import com.moodleV2.Academia.models.Student;
 import com.moodleV2.Academia.repositories.StudentRepository;
 import com.moodleV2.Academia.service.StudentService;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
@@ -21,6 +24,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -146,7 +150,7 @@ public class StudentController {
     }
 
 
-    @DeleteMapping("studenti/{id}")
+    @DeleteMapping("/studenti/{id}")
     ResponseEntity<?> archiveById(@PathVariable Long id) {
 
         if (id > 10000 || id < 0) {
@@ -162,6 +166,18 @@ public class StudentController {
 
         student.setArhivat(true);
         repository.save(student);
+
+        return ResponseEntity.ok(assembler.toModel(student));
+    }
+
+    @PatchMapping("/studenti/{id}")
+    ResponseEntity<?> partialUpdate(@PathVariable Long id, @RequestBody StudentDtoUpdate fields) {
+
+        if (id > 10000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Student student = service.partialUpdateStudent(id, fields);
 
         return ResponseEntity.ok(assembler.toModel(student));
     }
