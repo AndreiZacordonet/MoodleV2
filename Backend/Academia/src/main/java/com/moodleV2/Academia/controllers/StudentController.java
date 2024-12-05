@@ -1,6 +1,7 @@
 package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.StudentDto;
+import com.moodleV2.Academia.dto.StudentDtoCreateNew;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
 import com.moodleV2.Academia.exceptions.StudentNotFoundException;
 import com.moodleV2.Academia.models.Ciclu;
@@ -9,9 +10,11 @@ import com.moodleV2.Academia.repositories.StudentRepository;
 import com.moodleV2.Academia.service.StudentService;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Page;
@@ -114,6 +117,7 @@ public class StudentController {
         return ResponseEntity.ok(pagedModel);
     }
 
+
     @GetMapping("/studenti/{id}")
     ResponseEntity<?> getById(@PathVariable Long id) {
 
@@ -130,5 +134,17 @@ public class StudentController {
 
         return ResponseEntity.ok(assembler.toModel(student));
     }
+
+
+    @PostMapping("/studenti")
+    ResponseEntity<?> createNew(@Validated @RequestBody StudentDtoCreateNew newStudent) {
+
+        EntityModel<StudentDto> studentEntityModel = service.addStudent(newStudent);
+
+        return ResponseEntity.created(studentEntityModel.getRequiredLink(IanaLinkRelations.SELF)
+                .toUri()).body(studentEntityModel);
+    }
+
+    // TODO: get student courses
 
 }

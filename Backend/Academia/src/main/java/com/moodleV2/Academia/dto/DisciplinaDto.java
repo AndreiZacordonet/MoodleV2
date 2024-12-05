@@ -58,6 +58,16 @@ public class DisciplinaDto {
         this.tipExaminare = tipExaminare;
     }
 
+    public DisciplinaDto(Disciplina disciplina) {
+        this.cod = disciplina.getCod();
+        this.titular = new ProfesorDto(disciplina.getIdTitular());
+        this.numeDisciplina = disciplina.getNumeDisciplina();
+        this.anStudiu = disciplina.getAnStudiu();
+        this.tipDisciplina = disciplina.getTipDisciplina();
+        this.categorie = disciplina.getCategorie();
+        this.tipExaminare = disciplina.getTipExaminare();
+    }
+
     public Disciplina DisciplinaMapper() {
         return new Disciplina(
                 this.cod,
