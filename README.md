@@ -1,23 +1,52 @@
-# POS - solutii laborator/proiect
 
-| **Deadline&nbsp;general** | **_19.01.2025_** (_duminica, S14_) |
-| :--- | :--- |
-| **_Branch_ proiect** | Acest _branch_ va fi folosit de studentii care doresc sa dezvolte proiectul propus pentru disciplina. _Commit_-urile trebuie realizate saptamanal. Codurile sursa vor fi organizate pe module, iar in cadrul fiecauri astfel de modul se vor incarca un set de _log_-uri demonstrative. |
-| **_Branch_&nbsp;laborator** | Acest _branch_ va fi folosit de studentii care se vor concentra doar pe aplicatiile de baza propuse. Pentru fiecare laborator se va crea cate un director separat in cadrul caruia se vor incarca fisierele sursa, alaturi de un set de _log_-uri demonstrative.<br/><br/>**_Fiecare laborator are un deadline de maxim doua saptamani de la data finalizarii acestuia!! Commit-urile ulterioare NU vor fi considerate in evaluare_** |
+# Moodle Simulation Platform - MoodleV2
 
-## Evaluare
+This project implements a Spring Boot RESTful API to simulate a Moodle-like platform for managing university data. The application supports operations for students, professors, and courses, with a PostgreSQL database hosted on [Supabase](https://supabase.com).
 
-Evaluarea activitatii de laborator consta in evaluarea solutiilor incarcate, urmarind:
+---
 
-- respectarea standardelor si a recomandarilor corespuzatoare tipului de serviciu analizat;
-- calitatea codului sursa;
-- gradul de indeplinire a cerintelor propuse.
+## Features
 
-Solutiile **_remarcabile_** pot atrage bonusuri pentru nota de examen/media corespunzatoare disciplinei. **_Revedeti documentul de prezentare a disciplinei, disponibil pe platforma_** <https://edu.tuiasi.ro/>.
+### Core Functionalities
+- **Student and Professor Management**:
+  - CRUD operations for students and professors.
+  - Filtering and pagination support for efficient data querying.
+- **Course Management**:
+  - CRUD operations for courses, including associated materials and assessments.
+  - Relationship management between professors, students, and courses. *(TO BE DONE)*
+- **Identity Management Module (IDM)**:
+*(TO BE DONE)*
+  - User roles: Administrator, Professor, and Student.
+  - Role-based access control for data operations.
 
-## Link-uri utile
+### API Design
+- **RESTful Endpoints**:
+  - Endpoints adhere to RESTful principles with HATEOAS compliance.
+  - Rich navigation through resource states using hypermedia links.
+- **DTO Pattern**:
+  - Efficient data transfer with minimal API calls using Data Transfer Objects.
+- **Query Parameters**:
+  - Flexible filtering and search functionality.
+  - Path and query parameters for precise resource access.
 
-1. **Markdown** - limbaj de prezentare "pretty" pentru o documentatie `git` (in cazul in care considerati utila o scurta descriere a implementarii <https://www.markdownguide.org>)
-	- sintaxa de baza: <https://www.markdownguide.org/basic-syntax/>
-	- _cheat-sheet_: <https://www.markdownguide.org/cheat-sheet/>
-2. **Github** - comenzi uzuale: <https://education.github.com/git-cheat-sheet-education.pdf>
+### Database
+- **PostgreSQL**:
+  - Normalized schema with tables for students, professors, courses, and their relationships.
+  - Hosted on Supabase for reliable cloud-based database management.
+
+---
+
+## Project Structure
+
+The project follows a modular design with separation of concerns:
+
+- **Model**: Defines entities and data access objects (DAOs).
+- **Controller**: Handles routing and business logic.
+- **Service**: Encapsulates application logic and interacts with the database.
+
+---
+
+## Disclaimer
+
+This project is a work in progress and is actively under development. Features, functionality, and documentation are subject to change as the project evolves. Contributions and feedback are welcome, but please note that the current implementation may not yet fully reflect the final product.
+
