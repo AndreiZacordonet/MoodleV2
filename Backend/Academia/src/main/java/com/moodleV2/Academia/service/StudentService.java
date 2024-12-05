@@ -146,8 +146,8 @@ public class StudentService {
         if (classes == null || classes.isEmpty()) {
             return assembler.toModel(studentRepository.save(student));
         }
-        
-        Set<Disciplina> discipline = new HashSet<>(disciplinaRepository.findAllById(classes));
+
+        Set<Disciplina> discipline = disciplinaRepository.findAllById(classes).stream().filter(disciplina -> !disciplina.isArhivat()).collect(Collectors.toSet());
 
         if (discipline.isEmpty() || discipline.size() < classes.size()) {
             throw new DisciplinaNotFoundException("One or more of the specified course codes was not found.");
