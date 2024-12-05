@@ -2,18 +2,17 @@ package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.StudentDto;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
+import com.moodleV2.Academia.exceptions.StudentNotFoundException;
 import com.moodleV2.Academia.models.Ciclu;
 import com.moodleV2.Academia.models.Student;
+import com.moodleV2.Academia.repositories.StudentRepository;
 import com.moodleV2.Academia.service.StudentService;
 import io.swagger.v3.oas.annotations.Parameter;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,10 +27,12 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 public class StudentController {
 
     private final StudentService service;
+    private final StudentRepository repository;
     private final StudentModelAssembler assembler;
 
-    public StudentController(StudentService service, StudentModelAssembler assembler) {
+    public StudentController(StudentService service, StudentRepository repository, StudentModelAssembler assembler) {
         this.service = service;
+        this.repository = repository;
         this.assembler = assembler;
     }
 
@@ -112,4 +113,22 @@ public class StudentController {
 
         return ResponseEntity.ok(pagedModel);
     }
+
+    @GetMapping("/studenti/{id}")
+    ResponseEntity<?> getById(@PathVariable Long id) {
+
+        if (id > 10000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Student student = repository.findById(id)
+                .orElseThrow(() -> new StudentNotFoundException("Student with id { " + id + " } was not found."));
+
+        if (student.isArhivat()) {
+            throw new StudentNotFoundException("Student with id { " + id + " } was not found.");
+        }
+
+        return ResponseEntity.ok(assembler.toModel(student));
+    }
+
 }

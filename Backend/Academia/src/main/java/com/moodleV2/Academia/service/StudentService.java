@@ -25,7 +25,7 @@ public class StudentService {
     }
 
     public Page<Student> studentSearch(Pageable pageable, String nume, String prenume, String email, Ciclu ciclu, Integer an, Integer grupa, boolean arhivat) {
-        
+
         numeValidator(nume, 2, 50,
                 () -> new SearchParamException(nume));
         numeValidator(prenume, 2, 50,

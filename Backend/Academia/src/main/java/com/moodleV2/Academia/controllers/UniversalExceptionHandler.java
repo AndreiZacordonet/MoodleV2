@@ -146,4 +146,10 @@ public class UniversalExceptionHandler {
     public ResponseEntity<?> handleResourceAlreadyExistsException(ResourceAlreadyExistsException ex, HttpServletRequest request) {
         return bodyBuild(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
     }
+
+    @ExceptionHandler(StudentNotFoundException.class)
+    public ResponseEntity<?> handlerStudentNotFoundException(StudentNotFoundException ex, HttpServletRequest request) {
+        return bodyBuild(HttpStatus.NOT_FOUND, "Student not found.", ex.getMessage(), request);
+    }
+
 }

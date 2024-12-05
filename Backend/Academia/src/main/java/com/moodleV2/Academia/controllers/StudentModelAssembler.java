@@ -19,6 +19,7 @@ public class StudentModelAssembler implements RepresentationModelAssembler<Stude
         StudentDto studentDto = new StudentDto(student);
 
         return EntityModel.of(studentDto,
+                linkTo(methodOn(StudentController.class).getById(student.getId())).withSelfRel().withType("GET"),
                 linkTo(methodOn(StudentController.class).getAll(PageRequest.of(0, 10), null, null, null, null, null, null)).withRel("studenti").withType("GET"),
                 Link.of("/v3/api-docs").withRel("api-docs").withTitle("API Documentation"));
     }
