@@ -11,6 +11,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import static com.moodleV2.Academia.service.DataValidators.emailValidator;
+import static com.moodleV2.Academia.service.DataValidators.numeValidator;
+
 
 @Service
 public class StudentService {
@@ -22,18 +25,13 @@ public class StudentService {
     }
 
     public Page<Student> studentSearch(Pageable pageable, String nume, String prenume, String email, Ciclu ciclu, Integer an, Integer grupa, boolean arhivat) {
-
-        // FIXME: data validations
-        if (nume != null && nume.length() > 50) {
-            throw new SearchParamException(nume);
-        }
-        if (prenume != null && prenume.length() > 50) {
-            throw new SearchParamException(prenume);
-        }
-        EmailValidator emailValidator = new EmailValidator();
-        if (email != null && (email.length() > 50 || !emailValidator.isValid(email, null))) {
-            throw new SearchParamException(email);
-        }
+        
+        numeValidator(nume, 2, 50,
+                () -> new SearchParamException(nume));
+        numeValidator(prenume, 2, 50,
+                () -> new SearchParamException(prenume));
+        emailValidator(email,
+                () -> new SearchParamException(email));
         if (an != null && (an < 1 || an > 4)) {
             throw new SearchParamException(an);
         }

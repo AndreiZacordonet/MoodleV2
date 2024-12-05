@@ -5,6 +5,7 @@ import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.DisciplinaDtoCreateNew;
 import com.moodleV2.Academia.exceptions.DisciplinaNotFoundException;
 import com.moodleV2.Academia.exceptions.InvalidFieldException;
+import com.moodleV2.Academia.exceptions.ResourceAlreadyExistsException;
 import com.moodleV2.Academia.exceptions.SearchParamException;
 import com.moodleV2.Academia.models.*;
 import com.moodleV2.Academia.repositories.DisciplinaRepository;
@@ -18,6 +19,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+
+import static com.moodleV2.Academia.service.DataValidators.emailValidator;
+import static com.moodleV2.Academia.service.DataValidators.numeValidator;
 
 @Service
 public class DisciplinaService {
@@ -35,21 +39,17 @@ public class DisciplinaService {
     public Page<Disciplina> disciplinaSearch(Pageable pageable,
                                              String cod, String nume, Integer anStudiu, TipDisciplina tipDisciplina, Categorie categorie, TipExaminare tipExaminare, String numePrenumeTitular, String emailTitular, boolean fromArchive) {
 
-        // FIXME: use data validation functions
-        if (cod != null && cod.length() > 20) {
+        if (cod != null && (cod.length() > 20 || cod.isBlank())) {
             throw new SearchParamException(cod);
         }
-        if (nume != null && nume.length() > 100) {
-            throw new SearchParamException(nume);
-        }
+        numeValidator(nume, 2, 100,
+                () -> new SearchParamException(nume));
         if (anStudiu != null && (anStudiu > 4 || anStudiu < 1)) {
             throw new SearchParamException(anStudiu);
         }
 
-        EmailValidator emailValidator = new EmailValidator();
-        if (emailTitular != null && (emailTitular.length() > 50 || !emailValidator.isValid(emailTitular, null))) {
-            throw new SearchParamException(emailTitular);
-        }
+        emailValidator(emailTitular,
+                () -> new SearchParamException(emailTitular));
         if (numePrenumeTitular != null && numePrenumeTitular.length() > 100) {
             throw new SearchParamException(numePrenumeTitular);
         }
@@ -152,7 +152,6 @@ public class DisciplinaService {
 
     public EntityModel<DisciplinaDto> addDisciplina(DisciplinaDtoCreateNew disciplinaDto) {
 
-        // TODO: data validations
         String cod = disciplinaDto.getCod();
         String nume = disciplinaDto.getNumeDisciplina();
         Long idTitular = disciplinaDto.getIdTitular();
@@ -161,14 +160,14 @@ public class DisciplinaService {
         Categorie categorie = disciplinaDto.getCategorie();
         TipExaminare tipExaminare = disciplinaDto.getTipExaminare();
 
-        // FIXME: check if cod already exists
-        // FIXME: Return 409 Conflict if cod already exists
-        if (cod.length() > 20 || cod.isEmpty()) {
+        if (cod.length() > 20 || cod.isEmpty() || cod.isBlank()) {
             throw new InvalidFieldException("Codul este invalid");
         }
-        if (nume.length() > 100 || nume.length() < 2) {
-            throw new InvalidFieldException("Numele disciplinei este invalid");
+        if (disciplinaRepository.existsDisciplinaByCod(cod)) {
+            throw new ResourceAlreadyExistsException("Course with code {" + cod + "} already exists.");
         }
+        numeValidator(nume, 2, 100,
+                () -> new InvalidFieldException("Course name { " + nume + " } is not valid."));
         if (anStudiu < 1 || anStudiu > 4) {
             throw new InvalidFieldException("Anul de studiul al disciplinei este invalid.");
         }
@@ -202,13 +201,11 @@ public class DisciplinaService {
             throw new DisciplinaNotFoundException(cod);
         }
 
-        // FIXME: use data validation functions
         fields.forEach((fieldName, value) -> {
             switch (fieldName) {
                 case "nume" -> {
-                    if (value.length() > 20 || value.isEmpty()) {
-                        throw new InvalidFieldException("Codul este invalid");
-                    }
+                    numeValidator(value, 2, 100,
+                            () -> new InvalidFieldException("Course name { " + value + " } is not valid."));
                     disciplina.setNumeDisciplina(value);
                 }
                 case "idTitular" -> {
@@ -266,7 +263,7 @@ public class DisciplinaService {
                         throw new InvalidFieldException("Tipul examinarii este invalid");
                     }
                 }
-                default -> throw new InvalidFieldException("Câmpul " + fieldName + " nu este valid");
+                default -> throw new InvalidFieldException("Câmpul { " + fieldName + " } nu este valid");
             }
         });
 

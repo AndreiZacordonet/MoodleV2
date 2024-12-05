@@ -13,4 +13,6 @@ public interface DisciplinaRepository extends JpaRepository<Disciplina, String>,
     List<Disciplina> findByIdTitular(Profesor prof);
 
     Disciplina findByNumeDisciplina(String numeDisciplina);
+
+    boolean existsDisciplinaByCod(String cod);
 }

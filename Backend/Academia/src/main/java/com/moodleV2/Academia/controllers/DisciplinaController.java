@@ -238,8 +238,7 @@ public class DisciplinaController {
     @Parameter(name = "code", description = "Course unique code", example = "MATH69")
     ResponseEntity<?> archiveById(@PathVariable String code) {
 
-        // TODO: isBlanck validations to all strings?
-        if (code.isEmpty() || code.length() > 20) {
+        if (code.isEmpty() || code.length() > 20 || code.isBlank()) {
             throw new IndexOutOfBoundsException();
         }
 
@@ -247,7 +246,7 @@ public class DisciplinaController {
                 .orElseThrow(() -> new DisciplinaNotFoundException(code));
 
         if (disciplina.isArhivat()) {
-            throw new DisciplinaArchivedException("Class with code " + code + " is already archived");
+            throw new DisciplinaArchivedException("Class with code { " + code + " } is already archived");
         }
 
         disciplina.setArhivat(true);
@@ -297,8 +296,7 @@ public class DisciplinaController {
             ))
     ResponseEntity<?> partialUpdate(@PathVariable String code, @RequestBody Map<String, String> fields) {
 
-        // TODO: isBlanck validations to all strings?
-        if (code.isEmpty() || code.length() > 20) {
+        if (code.isEmpty() || code.length() > 20 || code.isBlank()) {
             throw new IndexOutOfBoundsException();
         }
 
