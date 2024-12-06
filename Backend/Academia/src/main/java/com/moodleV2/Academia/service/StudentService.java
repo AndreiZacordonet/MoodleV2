@@ -99,6 +99,7 @@ public class StudentService {
             return Page.empty(pageable);
         }
 
+        System.out.println("\n\n2 lei big tray\n\n");
         return studentRepository.findAll(Specification.where(
                 nameContains(nume)
                         .and(prenumeContains(prenume))

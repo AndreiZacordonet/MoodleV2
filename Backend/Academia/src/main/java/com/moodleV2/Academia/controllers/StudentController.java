@@ -207,6 +207,84 @@ public class StudentController {
     }
 
     // TODO: getStudentiArchived
+    @GetMapping("/studenti/archive/")
+    @Parameter(name = "page", description = "Page number, starting at 0", example = "0")
+    @Parameter(name = "size", description = "Number of items per page", example = "10")
+    @Parameter(name = "sort", description = "Sort criteria: nume, prenume, email, cicluStudii, anStudiu, grupa, asc, desc", example = "nume,asc")
+    ResponseEntity<?> getArchived(Pageable pageable,
+                             @RequestParam(name = "nume", required = false) String nume,
+                             @RequestParam(name = "prenume", required = false) String prenume,
+                             @RequestParam(name = "email", required = false) String email,
+                             @RequestParam(name = "ciclu", required = false) Ciclu ciclu,
+                             @RequestParam(name = "an", required = false) Integer an,
+                             @RequestParam(name = "grupa", required = false) Integer grupa,
+                             @RequestParam(name = "codDisciplina", required = false) String codDisciplina,
+                             @RequestParam(name = "profId", required = false) Long profId
+    ) {
+
+        if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
+            // default values for page and size (0, 20) override any errors like assigning a string or a negative number
+            throw new LengthPaginationException();
+        }
+
+        Page<Student> page = service.studentSearch(pageable, nume, prenume, email, ciclu, an, grupa, profId, codDisciplina, true);
+
+        List<EntityModel<StudentDto>> studenti =
+                page.getContent().stream()
+                        .map(assembler::toModel)
+                        .toList();
+
+        PagedModel<EntityModel<StudentDto>> pagedModel = PagedModel.of(
+                studenti,
+                new PagedModel.PageMetadata(
+                        page.getSize(),
+                        page.getNumber(),
+                        page.getTotalElements(),
+                        page.getTotalPages()
+                ),
+                Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa, codDisciplina, profId)).toUriComponentsBuilder()
+                                .queryParam("page", page.getNumber())
+                                .queryParam("size", page.getSize())
+                                .toUriString())
+                        .withSelfRel()
+        );
+
+        if (page.hasPrevious()) {
+            pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa, codDisciplina, profId)).toUriComponentsBuilder()
+                            .queryParam("page",pageable.getPageNumber() - 1)
+                            .queryParam("size", pageable.getPageSize())
+                            .toUriString())
+                    .withRel("prev")
+            );
+        }
+
+        if (page.hasNext()) {
+            pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa, codDisciplina, profId)).toUriComponentsBuilder()
+                            .queryParam("page",pageable.getPageNumber() + 1)
+                            .queryParam("size", pageable.getPageSize())
+                            .toUriString())
+                    .withRel("next")
+            );
+        }
+
+        // adding first page link
+        pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa, codDisciplina, profId)).toUriComponentsBuilder()
+                        .queryParam("page",0)
+                        .queryParam("size", pageable.getPageSize())
+                        .toUriString())
+                .withRel("first")
+        );
+
+        // adding last page link
+        pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa, codDisciplina, profId)).toUriComponentsBuilder()
+                        .queryParam("page",page.getTotalPages() - 1)
+                        .queryParam("size", pageable.getPageSize())
+                        .toUriString())
+                .withRel("last")
+        );
+
+        return ResponseEntity.ok(pagedModel);
+    }
 
     // TODO: get student courses
 
