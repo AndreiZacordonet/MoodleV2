@@ -55,7 +55,9 @@ public class StudentController {
                              @RequestParam(name = "email", required = false) String email,
                              @RequestParam(name = "ciclu", required = false) Ciclu ciclu,
                              @RequestParam(name = "an", required = false) Integer an,
-                             @RequestParam(name = "grupa", required = false) Integer grupa
+                             @RequestParam(name = "grupa", required = false) Integer grupa,
+                             @RequestParam(name = "codDisciplina", required = false) String codDisciplina,
+                             @RequestParam(name = "profId", required = false) Long profId
                              ) {
 
         if (pageable.getPageNumber() > 1000 || pageable.getPageSize() > 30) {
@@ -63,7 +65,7 @@ public class StudentController {
             throw new LengthPaginationException();
         }
 
-        Page<Student> page = service.studentSearch(pageable, nume, prenume, email, ciclu, an, grupa, false);
+        Page<Student> page = service.studentSearch(pageable, nume, prenume, email, ciclu, an, grupa, profId, codDisciplina, false);
 
         List<EntityModel<StudentDto>> studenti =
                 page.getContent().stream()
@@ -78,7 +80,7 @@ public class StudentController {
                         page.getTotalElements(),
                         page.getTotalPages()
                 ),
-                Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa)).toUriComponentsBuilder()
+                Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa, codDisciplina, profId)).toUriComponentsBuilder()
                                 .queryParam("page", page.getNumber())
                                 .queryParam("size", page.getSize())
                                 .toUriString())
@@ -86,7 +88,7 @@ public class StudentController {
         );
 
         if (page.hasPrevious()) {
-            pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa)).toUriComponentsBuilder()
+            pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa, codDisciplina, profId)).toUriComponentsBuilder()
                             .queryParam("page",pageable.getPageNumber() - 1)
                             .queryParam("size", pageable.getPageSize())
                             .toUriString())
@@ -95,7 +97,7 @@ public class StudentController {
         }
 
         if (page.hasNext()) {
-            pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa)).toUriComponentsBuilder()
+            pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa, codDisciplina, profId)).toUriComponentsBuilder()
                             .queryParam("page",pageable.getPageNumber() + 1)
                             .queryParam("size", pageable.getPageSize())
                             .toUriString())
@@ -104,7 +106,7 @@ public class StudentController {
         }
 
         // adding first page link
-        pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa)).toUriComponentsBuilder()
+        pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa, codDisciplina, profId)).toUriComponentsBuilder()
                         .queryParam("page",0)
                         .queryParam("size", pageable.getPageSize())
                         .toUriString())
@@ -112,7 +114,7 @@ public class StudentController {
         );
 
         // adding last page link
-        pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa)).toUriComponentsBuilder()
+        pagedModel.add(Link.of(linkTo(methodOn(StudentController.class).getAll(pageable, nume, prenume, email, ciclu, an, grupa, codDisciplina, profId)).toUriComponentsBuilder()
                         .queryParam("page",page.getTotalPages() - 1)
                         .queryParam("size", pageable.getPageSize())
                         .toUriString())

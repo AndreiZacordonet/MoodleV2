@@ -1,16 +1,14 @@
 package com.moodleV2.Academia.service;
 
 import com.moodleV2.Academia.controllers.StudentModelAssembler;
-import com.moodleV2.Academia.dto.DisciplinaDto;
-import com.moodleV2.Academia.dto.StudentDto;
-import com.moodleV2.Academia.dto.StudentDtoCreateNew;
-import com.moodleV2.Academia.dto.StudentDtoUpdate;
+import com.moodleV2.Academia.dto.*;
 import com.moodleV2.Academia.exceptions.*;
 import com.moodleV2.Academia.models.Ciclu;
 import com.moodleV2.Academia.models.Disciplina;
 import com.moodleV2.Academia.models.Profesor;
 import com.moodleV2.Academia.models.Student;
 import com.moodleV2.Academia.repositories.DisciplinaRepository;
+import com.moodleV2.Academia.repositories.ProfesorRepository;
 import com.moodleV2.Academia.repositories.StudentRepository;
 import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.data.domain.Page;
@@ -35,14 +33,16 @@ public class StudentService {
     private final StudentRepository studentRepository;
     private final StudentModelAssembler assembler;
     private final DisciplinaRepository disciplinaRepository;
+    private final ProfesorRepository profesorRepository;
 
-    public StudentService(StudentRepository studentRepository, StudentModelAssembler assembler, DisciplinaRepository disciplinaRepository) {
+    public StudentService(StudentRepository studentRepository, StudentModelAssembler assembler, DisciplinaRepository disciplinaRepository, ProfesorRepository profesorRepository) {
         this.studentRepository = studentRepository;
         this.assembler = assembler;
         this.disciplinaRepository = disciplinaRepository;
+        this.profesorRepository = profesorRepository;
     }
 
-    public Page<Student> studentSearch(Pageable pageable, String nume, String prenume, String email, Ciclu ciclu, Integer an, Integer grupa, boolean arhivat) {
+    public Page<Student> studentSearch(Pageable pageable, String nume, String prenume, String email, Ciclu ciclu, Integer an, Integer grupa, Long profId, String codDisciplina, boolean arhivat) {
 
         numeValidator(nume, 2, 50,
                 () -> new SearchParamException(nume));
@@ -56,9 +56,48 @@ public class StudentService {
         if (grupa != null && (grupa < 1 || grupa > 50)) {
             throw new SearchParamException(grupa);
         }
+        if (codDisciplina != null && (codDisciplina.length() > 20 || codDisciplina.isBlank())) {
+            throw new SearchParamException(codDisciplina);
+        }
+        if (profId != null && (profId > 1000 || profId < 1)) {
+            throw new SearchParamException(profId);
+        }
 
-        // TODO: search by a discipline
-        // TODO: search by a teacher (teacher has some courses and students are enrolled in that courses)
+        // return all student ids that are enrolled in a course
+        Set<Long> ids = new HashSet<>();
+        if (codDisciplina != null) {
+            Disciplina disciplina = disciplinaRepository.findById(codDisciplina)
+                    .orElseThrow(() -> new DisciplinaNotFoundException(codDisciplina));
+            if (disciplina.isArhivat() == arhivat) {
+                ids = studentRepository.searchStudentsByClasses(disciplina)
+                        .stream()
+                        .filter(student -> student.isArhivat() == arhivat)
+                        .map(Student::getId).collect(Collectors.toSet());
+            }
+            else {
+                throw new DisciplinaNotFoundException(codDisciplina);
+            }
+        }
+
+        if (profId != null) {
+            Profesor profesor = profesorRepository.findById(profId)
+                    .orElseThrow(() -> new ProfesorNotFoundException(profId));
+
+            if (profesor.isArhivat() != arhivat) {
+                throw new ProfesorNotFoundException(profId);
+            }
+
+            List<Disciplina> disciplinas = disciplinaRepository.findByIdTitular(profesor);
+            for (Disciplina d : disciplinas) {
+                    ids.addAll(studentRepository.getStudentsByClasses(d).stream()
+                            .filter(student -> student.isArhivat() == arhivat)
+                            .map(Student::getId).collect(Collectors.toSet()));
+            }
+        }
+
+        if ((codDisciplina != null || profId != null) && ids.isEmpty()) {
+            return Page.empty(pageable);
+        }
 
         return studentRepository.findAll(Specification.where(
                 nameContains(nume)
@@ -68,6 +107,7 @@ public class StudentService {
                         .and(anEquals(an))
                         .and(grupaEquals(grupa))
                         .and(arhivareEquals(arhivat))
+                        .and(idsIn(ids))
                 ), pageable);
     }
 
@@ -105,7 +145,11 @@ public class StudentService {
         return ((root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("arhivat"), arhivat));
     }
 
-
+    public static Specification<Student> idsIn(Set<Long> ids) {
+        return (root, query, criteriaBuilder) ->
+                ids == null || ids.isEmpty() ? null : root.get("id").in(ids);
+    }
+    
     public EntityModel<StudentDto> addStudent(StudentDtoCreateNew studentDto) {
 
         String nume = studentDto.getNume();
