@@ -17,13 +17,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.IanaLinkRelations;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -471,7 +467,6 @@ public class ProfesorController {
     }
 
 
-    // FIXME: retrieve all courses (from all professors) instead?
     /**
      * Retrieves all disciplines (classes) associated with a specific professor.
      *
@@ -480,8 +475,8 @@ public class ProfesorController {
      * @throws ProfesorNotFoundException if no professor is found with the provided identifier.
      * @throws IndexOutOfBoundsException if the identifier is outside the valid range.
      */
-    @GetMapping("/profesori/{id}/discipline")
-    @Operation(summary = "Retrieve courses.",
+    @GetMapping("/profesori/{id}/my-disciplines")
+    @Operation(summary = "Retrieve a professors courses.",
             description = "Retrieve all courses specified by a professor identifier.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
@@ -489,13 +484,43 @@ public class ProfesorController {
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
     @Parameter(name = "id", description = "Professor unique code", example = "2")
-    ResponseEntity<?> getDiscipline(@PathVariable Long id) {
+    ResponseEntity<?> getMyDisciplines(@PathVariable Long id) {
 
-        return ResponseEntity.ok(service.getDiscipline(id));
+        //TODO: add links
+        return ResponseEntity.ok(service.getMyDisciplines(id));
+    }
+
+
+    @GetMapping("/profesori/{id}/all-disciplines")
+    @Operation(summary = "Retrieve all courses.",
+            description = "Retrieve all courses specified by a professor identifier.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
+            @ApiResponse(responseCode = "404", description = "Professor not found"),
+            @ApiResponse(responseCode = "416", description = "Invalid identifier")
+    })
+    @Parameter(name = "id", description = "Professor unique code", example = "2")
+    ResponseEntity<?> getAllDisciplines(@PathVariable Long id) {
+
+        List<EntityModel<DisciplinaDto>> disciplines = service.getAllDisciplines(id);
+
+        CollectionModel<EntityModel<DisciplinaDto>> collectionModel = CollectionModel.of(disciplines);
+
+        collectionModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
+
+        return ResponseEntity.ok(collectionModel);
     }
 
 
     // TODO: get all students?
+    @GetMapping("/profesori/{id}/studenti")
+    ResponseEntity<?> getStudenti(@PathVariable Long id) {
+
+        //TODO: add link
+
+        return ResponseEntity.ok(service.getMyStudents(id));
+    }
 
     // TODO: get all student by course?
+    // or maybe not
 }

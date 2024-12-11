@@ -2,24 +2,27 @@ package com.moodleV2.Academia.service;
 
 import com.moodleV2.Academia.controllers.DisciplinaModelAssembler;
 import com.moodleV2.Academia.controllers.ProfesorModelAssembler;
+import com.moodleV2.Academia.controllers.StudentModelAssembler;
 import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.ProfesorDto;
-import com.moodleV2.Academia.exceptions.*;
-import com.moodleV2.Academia.models.Asociere;
-import com.moodleV2.Academia.models.Disciplina;
-import com.moodleV2.Academia.models.Grad;
-import com.moodleV2.Academia.models.Profesor;
+import com.moodleV2.Academia.dto.StudentDto;
+import com.moodleV2.Academia.exceptions.InvalidFieldException;
+import com.moodleV2.Academia.exceptions.ProfesorNotFoundException;
+import com.moodleV2.Academia.exceptions.ResourceAlreadyExistsException;
+import com.moodleV2.Academia.exceptions.SearchParamException;
+import com.moodleV2.Academia.models.*;
 import com.moodleV2.Academia.repositories.DisciplinaRepository;
 import com.moodleV2.Academia.repositories.ProfesorRepository;
-import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
+import com.moodleV2.Academia.repositories.StudentRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.Link;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.moodleV2.Academia.service.DataValidators.emailValidator;
 import static com.moodleV2.Academia.service.DataValidators.numeValidator;
@@ -30,14 +33,18 @@ public class ProfesorService {
 
     private final ProfesorRepository profesorRepository;
     private final DisciplinaRepository disciplinaRepository;
+    private final StudentRepository studentRepository;
     private final ProfesorModelAssembler assembler;
     private final DisciplinaModelAssembler assemblerDisciplina;
+    private final StudentModelAssembler assemblerStudent;
 
-    public ProfesorService(ProfesorRepository profesorRepository, DisciplinaRepository disciplinaRepository, ProfesorModelAssembler assembler, DisciplinaModelAssembler assemblerDisciplina) {
+    public ProfesorService(ProfesorRepository profesorRepository, DisciplinaRepository disciplinaRepository, StudentRepository studentRepository, ProfesorModelAssembler assembler, DisciplinaModelAssembler assemblerDisciplina, StudentModelAssembler assemblerStudent) {
         this.profesorRepository = profesorRepository;
         this.disciplinaRepository = disciplinaRepository;
+        this.studentRepository = studentRepository;
         this.assembler = assembler;
         this.assemblerDisciplina = assemblerDisciplina;
+        this.assemblerStudent = assemblerStudent;
     }
 
     public Page<Profesor> ProfesorSearch(Pageable pageable,
@@ -117,6 +124,11 @@ public class ProfesorService {
     }
 
     public static Specification<Profesor> idsIn(List<Long> ids) {
+        return (root, query, criteriaBuilder) ->
+                ids == null || ids.isEmpty() ? null : root.get("id").in(ids);
+    }
+
+    public static Specification<Student> idsIn2(List<Long> ids) {
         return (root, query, criteriaBuilder) ->
                 ids == null || ids.isEmpty() ? null : root.get("id").in(ids);
     }
@@ -231,19 +243,83 @@ public class ProfesorService {
         return profesor;
     }
 
-    public List<EntityModel<DisciplinaDto>> getDiscipline(Long id) {
+    public List<EntityModel<DisciplinaDto>> getMyDisciplines(Long id) {
 
         if (id > 1000 || id < 0) {
             throw new IndexOutOfBoundsException();
         }
-    // FIXME: retrive courses from all teachers
+
         Profesor profesor = profesorRepository.findById(id)
                 .orElseThrow(() -> new ProfesorNotFoundException(id));
 
+        if (profesor.isArhivat()) {
+            throw new ProfesorNotFoundException(id);
+        }
+
+        // FIXME: add pagination
         return disciplinaRepository.findByIdTitular(profesor)
                 .stream()
+                .filter(disciplina -> !disciplina.isArhivat())
                 .map(assemblerDisciplina::toModel)
                 .toList();
+    }
+
+    public List<EntityModel<DisciplinaDto>> getAllDisciplines(Long id) {
+
+        if (id > 1000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+        // FIXME: if teacher is logged in?
+        Profesor profesor = profesorRepository.findById(id)
+                .orElseThrow(() -> new ProfesorNotFoundException(id));
+
+        if (profesor.isArhivat()) {
+            throw new ProfesorNotFoundException(id);
+        }
+
+        // FIXME: add pagination
+        // TODO: add link
+        return disciplinaRepository.findAll()
+                .stream()
+                .filter(disciplina -> !disciplina.isArhivat())
+                .map(disciplina -> {
+                        EntityModel<DisciplinaDto> entityModel = assemblerDisciplina.toModel(disciplina);
+                        entityModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
+
+                        return entityModel;
+                })
+                .toList();
+    }
+
+    public List<EntityModel<StudentDto>> getMyStudents(Long id) {
+
+        if (id > 1000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Profesor profesor = profesorRepository.findById(id)
+                .orElseThrow(() -> new ProfesorNotFoundException(id));
+
+        if (profesor.isArhivat()) {
+            throw new ProfesorNotFoundException(id);
+        }
+
+        // FIXME: not working properly
+        // FIXME: add pagination
+        Set<Long> ids = new HashSet<>();
+        List<Disciplina> disciplinas = disciplinaRepository.findByIdTitular(profesor);
+        for (Disciplina d : disciplinas) {
+            ids.addAll(studentRepository.getStudentsByClasses(d).stream()
+                    .filter(student -> !student.isArhivat())
+                    .map(Student::getId).collect(Collectors.toSet()));
+        }
+
+        if (ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        return studentRepository.findAll(Specification.where(idsIn2(ids.stream().toList())))
+                .stream().map(assemblerStudent::toModel).toList();
     }
 
 }
