@@ -2,6 +2,7 @@ package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.ProfesorDto;
+import com.moodleV2.Academia.dto.StudentDto;
 import com.moodleV2.Academia.exceptions.InvalidFieldException;
 import com.moodleV2.Academia.exceptions.LengthPaginationException;
 import com.moodleV2.Academia.exceptions.ProfesorArchivedException;
@@ -485,8 +486,13 @@ public class ProfesorController {
     })
     @Parameter(name = "id", description = "Professor unique code", example = "2")
     ResponseEntity<?> getMyDisciplines(@PathVariable Long id) {
+        
+        List<EntityModel<DisciplinaDto>> disciplines = service.getMyDisciplines(id);
 
-        //TODO: add links
+        CollectionModel<EntityModel<DisciplinaDto>> collectionModel = CollectionModel.of(disciplines);
+
+        collectionModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
+
         return ResponseEntity.ok(service.getMyDisciplines(id));
     }
 
@@ -516,9 +522,13 @@ public class ProfesorController {
     @GetMapping("/profesori/{id}/studenti")
     ResponseEntity<?> getStudenti(@PathVariable Long id) {
 
-        //TODO: add link
+        List<EntityModel<StudentDto>> students = service.getMyStudents(id);
 
-        return ResponseEntity.ok(service.getMyStudents(id));
+        CollectionModel<EntityModel<StudentDto>> collectionModel = CollectionModel.of(students);
+
+        collectionModel.add(Link.of("/api/academia/studenti").withRel("studenti").withType("GET"));
+
+        return ResponseEntity.ok(collectionModel);
     }
 
     // TODO: get all student by course?
