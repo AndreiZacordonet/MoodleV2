@@ -256,7 +256,7 @@ public class ProfesorService {
             throw new ProfesorNotFoundException(id);
         }
 
-        // FIXME: add pagination
+        // FIXME: add pagination?
         return disciplinaRepository.findByIdTitular(profesor)
                 .stream()
                 .filter(disciplina -> !disciplina.isArhivat())
@@ -277,17 +277,11 @@ public class ProfesorService {
             throw new ProfesorNotFoundException(id);
         }
 
-        // FIXME: add pagination
-        // TODO: add link
+        // FIXME: add pagination?
         return disciplinaRepository.findAll()
                 .stream()
                 .filter(disciplina -> !disciplina.isArhivat())
-                .map(disciplina -> {
-                        EntityModel<DisciplinaDto> entityModel = assemblerDisciplina.toModel(disciplina);
-                        entityModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
-
-                        return entityModel;
-                })
+                .map(assemblerDisciplina::toModel)
                 .toList();
     }
 
@@ -304,8 +298,7 @@ public class ProfesorService {
             throw new ProfesorNotFoundException(id);
         }
 
-        // FIXME: not working properly
-        // FIXME: add pagination
+        // FIXME: add pagination?
         Set<Long> ids = new HashSet<>();
         List<Disciplina> disciplinas = disciplinaRepository.findByIdTitular(profesor);
         for (Disciplina d : disciplinas) {
