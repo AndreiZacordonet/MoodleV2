@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.AfterDomainEventPublication;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.hateoas.EntityModel;
@@ -209,8 +210,14 @@ public class DisciplinaController {
             description = "Using the sent data, checks for its correctness and proceeds to create and store the new course.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Course created successfully", content = @Content(schema = @Schema(implementation = DisciplinaDto.class))),
+            @ApiResponse(responseCode = "409", description = "Course code already exists"),
             @ApiResponse(responseCode = "422", description = "Course data is invalid")
     })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Fields to be updated. Only the provided fields will be modified.",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = DisciplinaDtoCreateNew.class)
+            ))
     ResponseEntity<?> createNew(@Valid @RequestBody DisciplinaDtoCreateNew newDisciplina) {
 
         EntityModel<DisciplinaDto> disciplinaDtoEntityModel = service.addDisciplina(newDisciplina);
