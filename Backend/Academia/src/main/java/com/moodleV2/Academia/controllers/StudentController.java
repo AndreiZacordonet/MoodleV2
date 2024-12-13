@@ -222,8 +222,7 @@ public class StudentController {
         return ResponseEntity.ok(pagedModel);
     }
 
-    
-    // TODO: get student courses
+
     @GetMapping("/studenti/{id}/disciplines")
     ResponseEntity<?> getMyDisciplines(@PathVariable Long id) {
 
@@ -232,6 +231,7 @@ public class StudentController {
         CollectionModel<EntityModel<DisciplinaDto>> collectionModel = CollectionModel.of(disciplines);
 
         collectionModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
+        collectionModel.add(linkTo(methodOn(StudentController.class).getMyDisciplines(id)).withSelfRel().withType("GET"));
 
         return ResponseEntity.ok(collectionModel);
     }

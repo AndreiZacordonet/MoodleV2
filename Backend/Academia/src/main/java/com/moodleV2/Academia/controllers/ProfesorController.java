@@ -431,6 +431,7 @@ public class ProfesorController {
         CollectionModel<EntityModel<DisciplinaDto>> collectionModel = CollectionModel.of(disciplines);
 
         collectionModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
+        collectionModel.add(linkTo(methodOn(ProfesorController.class).getMyDisciplines(id)).withSelfRel().withType("GET"));
 
         return ResponseEntity.ok(service.getMyDisciplines(id));
     }
@@ -452,6 +453,7 @@ public class ProfesorController {
         CollectionModel<EntityModel<DisciplinaDto>> collectionModel = CollectionModel.of(disciplines);
 
         collectionModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
+        collectionModel.add(linkTo(methodOn(ProfesorController.class).getAllDisciplines(id)).withSelfRel().withType("GET"));
 
         return ResponseEntity.ok(collectionModel);
     }
@@ -466,6 +468,7 @@ public class ProfesorController {
         CollectionModel<EntityModel<StudentDto>> collectionModel = CollectionModel.of(students);
 
         collectionModel.add(Link.of("/api/academia/studenti").withRel("studenti").withType("GET"));
+        collectionModel.add(linkTo(methodOn(ProfesorController.class).getStudenti(id)).withSelfRel().withType("GET"));
 
         return ResponseEntity.ok(collectionModel);
     }
