@@ -1,9 +1,7 @@
 package com.moodleV2.Academia.controllers;
 
 import com.moodleV2.Academia.dto.*;
-import com.moodleV2.Academia.exceptions.LengthPaginationException;
-import com.moodleV2.Academia.exceptions.StudentArchivedException;
-import com.moodleV2.Academia.exceptions.StudentNotFoundException;
+import com.moodleV2.Academia.exceptions.*;
 import com.moodleV2.Academia.models.Ciclu;
 import com.moodleV2.Academia.models.Student;
 import com.moodleV2.Academia.repositories.StudentRepository;
@@ -43,6 +41,37 @@ public class StudentController {
     }
 
 
+    /**
+     * Retrieves a paginated list of students with optional filtering and sorting criteria.
+     *
+     * @param pageable Pagination details, including page number, size, and sorting criteria.<br>
+     *                 - page: Page number, starting from 0 (default 0).<br>
+     *                 - size: Number of items per page (default 20).<br>
+     *                 - sort: Sorting criteria, e.g., "nume,asc".
+     * @param nume Filter by student's last name. Partial matches are allowed, and the search is case-insensitive.
+     * @param prenume Filter by student's first name. Partial matches are allowed, and the search is case-insensitive.
+     * @param email Filter by student's email address. Must be a valid email format.
+     * @param ciclu Filter by student's study cycle. Allowed values:<br>
+     *              - LICENTA, MASTER.
+     * @param an Filter by student's study year.
+     * @param grupa Filter by student's study group.
+     * @param codDisciplina Filter by the unique code of the student's class.
+     * @param profId Filter by the identifier of the student's professor.
+     * @return A paginated response containing a list of students as {@code StudentDto} objects, along with pagination
+     *         metadata and navigation links for previous, next, first, and last pages.
+     *
+     * @throws SearchParamException if any of the provided search parameters are invalid:
+     *     - `nume` or `prenume` has less than 2 or more than 50 characters.
+     *     - `email` is invalid.
+     *     - `an` is not between 1 and 4.
+     *     - `grupa` is not between 1 and 50.
+     *     - `codDisciplina` is empty, null, or exceeds 20 characters.
+     *     - `profId` is less than 1 or greater than 1000.
+     * @throws DisciplinaNotFoundException if the course with the given `codDisciplina`
+     *     does not exist or does not match the `arhivat` status.
+     * @throws ProfesorNotFoundException if the professor with `profId` does not exist
+     *     or does not match the `arhivat` status.
+     */
     @GetMapping("/studenti")
     @Operation(summary = "Retrieve all students information.",
             description = "Specific filtering can be applied, the result is shown in a page based on selected preferences.")
@@ -63,7 +92,7 @@ public class StudentController {
     @Parameter(name = "grupa", description = "Filyer by student's study group.", example = "123")
     @Parameter(name = "codDisciplina", description = "Filter by student's class code.", example = "MATH69")
     @Parameter(name = "profId", description = "Filter by a student's professor identifier.",example = "3")
-    ResponseEntity<?> getAll(Pageable pageable,
+     ResponseEntity<?> getAll(Pageable pageable,
                              @RequestParam(name = "nume", required = false) String nume,
                              @RequestParam(name = "prenume", required = false) String prenume,
                              @RequestParam(name = "email", required = false) String email,
@@ -108,6 +137,15 @@ public class StudentController {
 
 
 
+    /**
+     * Retrieves a single student's detailed information by their unique identifier.
+     *
+     * @param id The unique identifier of the student.
+     * @return A response containing the full details of the student as a {@code StudentDto} object, or an error
+     *         if the student is not found or the identifier is invalid.
+     * @throws StudentNotFoundException if student is not found.
+     * @throws IndexOutOfBoundsException if the student `id` is too big or negative.
+     */
     @GetMapping("/studenti/{id}")
     @Operation(summary = "Retrieve ONE student full informations.",
             description = "Searches by the provided student identifier.")
@@ -134,6 +172,20 @@ public class StudentController {
     }
 
 
+    /**
+     * Creates a new student using the provided data.
+     *
+     * @param newStudent A {@code StudentDtoCreateNew} object containing the data for the new student.
+     * @return A response with the newly created student details as a {@code StudentDto} object and a link to the resource.
+     * @throws InvalidFieldException if any of the following fields are invalid:
+     *     - `nume` or `prenume` has less than 2 or more than 50 characters.
+     *     - `email` is invalid or already exists.
+     *     - `an` is not between 1 and 4.
+     *     - `grupa` is not between 1 and 50.
+     * @throws ResourceAlreadyExistsException if a student with the given `email` already exists.
+     * @throws DisciplinaNotFoundException if one or more of the specified course codes
+     *     are not found or are archived.
+     */
     @PostMapping("/studenti")
     @Operation(summary = "Create a new student.",
             description = "Using the sent data, checks for its correctness and proceeds to create and store the new student.")
@@ -158,6 +210,15 @@ public class StudentController {
     }
 
 
+    /**
+     * Archives a specified student by their unique identifier.
+     *
+     * @param id The unique identifier of the student to be archived.
+     * @return A response containing the updated details of the student, or an error if the student is not found
+     *         or the identifier is invalid.
+     * @throws StudentNotFoundException if student is not found.
+     * @throws IndexOutOfBoundsException if the student `id` is too big or negative.
+     */
     @DeleteMapping("/studenti/{id}")
     @Operation(summary = "Archives a specified student.",
             description = "Using the provided code, it will switch the archive flag thus marking it as being archived.")
@@ -187,6 +248,24 @@ public class StudentController {
     }
 
 
+    /**
+     * Partially updates a student's data based on the provided fields.
+     *
+     * @param id The unique identifier of the student to be updated.
+     * @param fields A {@code StudentDtoUpdate} object containing the fields to update.
+     * @return A response containing the updated details of the student as a {@code StudentDto} object, or an error
+     *         if the student is not found, the identifier is invalid, or the data is invalid.
+     * @throws StudentNotFoundException if the student with the given `id` does not exist
+     *     or is archived.
+     * @throws InvalidFieldException if any updated fields are invalid:
+     *     - `nume` or `prenume` has less than 2 or more than 50 characters.
+     *     - `email` is invalid or already exists.
+     *     - `an` is not between 1 and 4.
+     *     - `grupa` is not between 1 and 50.
+     * @throws ResourceAlreadyExistsException if a student with the updated `email` already exists.
+     * @throws DisciplinaNotFoundException if one or more of the specified course codes
+     *     are not found or are archived.
+     */
     @PatchMapping("/studenti/{id}")
     @Operation(summary = "Updates specified student data.",
             description = "Provided fields, if syntactically and logically correct, will be updated.")
@@ -215,6 +294,16 @@ public class StudentController {
     }
 
 
+    /**
+     * Removes a student from the archive by their unique identifier, setting the student to "active".
+     *
+     * @param id The unique identifier of the student to be un-archived.
+     * @return A response containing the updated details of the student as a {@code StudentDto} object, or an error
+     *         if the student is not found or the identifier is invalid.
+     *
+     * @throws StudentNotFoundException if student is not found.
+     * @throws IndexOutOfBoundsException if the student `id` is too big or negative.
+     */
     @PostMapping("/studenti/{id}/activate")
     @Operation(summary = "Removes specified student from archive.",
             description = "If the provided code is correct, marks the course as being active by switching the archive flag.")
@@ -244,6 +333,36 @@ public class StudentController {
     }
 
 
+    /**
+     * Retrieves a paginated list of archived students with optional filtering and sorting criteria.
+     *
+     * @param pageable Pagination details, including page number, size, and sorting criteria.<br>
+     *                 - page: Page number, starting from 0 (default 0).<br>
+     *                 - size: Number of items per page (default 20).<br>
+     *                 - sort: Sorting criteria, e.g., "nume,asc".
+     * @param nume Filter by student's last name. Partial matches are allowed, and the search is case-insensitive.
+     * @param prenume Filter by student's first name. Partial matches are allowed, and the search is case-insensitive.
+     * @param email Filter by student's email address. Must be a valid email format.
+     * @param ciclu Filter by student's study cycle. Allowed values:<br>
+     *              - LICENTA, MASTER.
+     * @param an Filter by student's study year.
+     * @param grupa Filter by student's study group.
+     * @param codDisciplina Filter by the unique code of the student's class.
+     * @param profId Filter by the identifier of the student's professor.
+     * @return A paginated response containing a list of archived students as {@code StudentDto} objects, along with pagination
+     *         metadata and navigation links for previous, next, first, and last pages.
+     * @throws SearchParamException if any of the provided search parameters are invalid:
+     *     - `nume` or `prenume` has less than 2 or more than 50 characters.
+     *     - `email` is invalid.
+     *     - `an` is not between 1 and 4.
+     *     - `grupa` is not between 1 and 50.
+     *     - `codDisciplina` is empty, null, or exceeds 20 characters.
+     *     - `profId` is less than 1 or greater than 1000.
+     * @throws DisciplinaNotFoundException if the course with the given `codDisciplina`
+     *     does not exist or does not match the `arhivat` status.
+     * @throws ProfesorNotFoundException if the professor with `profId` does not exist
+     *     or does not match the `arhivat` status.
+     */
     @GetMapping("/studenti/archive")
     @Operation(summary = "Retrieve all ARCHIVED students information.",
             description = "Specific filtering can be applied, the result is shown in a page based on selected preferences.")
@@ -308,6 +427,16 @@ public class StudentController {
     }
 
 
+    /**
+     * Retrieves a list of all courses associated with a specific student.
+     *
+     * @param id The unique identifier of the student.
+     * @return A response containing the list of courses as {@code DisciplinaDto} objects, along with navigation links
+     *         to related resources such as the student and courses endpoints.
+     * @throws StudentNotFoundException if the student with the given `id` does not exist
+     *     or is archived.
+     * @throws IndexOutOfBoundsException if the `id` is outside the valid range (0 to 10000).
+     */
     @GetMapping("/studenti/{id}/disciplines")
     @Operation(summary = "Retrieve a student's courses.",
             description = "Retrieve all courses specified by a student identifier.")
