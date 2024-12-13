@@ -182,8 +182,14 @@ public class ProfesorController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Professor created successfully", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
             @ApiResponse(responseCode = "406", description = "Parameter format is not correct"),
+            @ApiResponse(responseCode = "409", description = "Professor email already exists"),
             @ApiResponse(responseCode = "422", description = "Professor data is invalid")
     })
+    @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "New professor data",
+            content = @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ProfesorDto.class)
+            ))
     ResponseEntity<?> createNew(@Validated @RequestBody ProfesorDto newProfesor) {
 
         EntityModel<ProfesorDto> profesorEntityModel = service.AddProfesor(newProfesor);
@@ -254,6 +260,7 @@ public class ProfesorController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
             @ApiResponse(responseCode = "404", description = "Professor not found"),
+            @ApiResponse(responseCode = "409", description = "Professor email already exists"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier"),
             @ApiResponse(responseCode = "422", description = "Professor data is invalid")
     })

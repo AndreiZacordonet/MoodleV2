@@ -2,7 +2,10 @@ package com.moodleV2.Academia.service;
 
 import com.moodleV2.Academia.controllers.DisciplinaModelAssembler;
 import com.moodleV2.Academia.controllers.StudentModelAssembler;
-import com.moodleV2.Academia.dto.*;
+import com.moodleV2.Academia.dto.DisciplinaDto;
+import com.moodleV2.Academia.dto.StudentDto;
+import com.moodleV2.Academia.dto.StudentDtoCreateNew;
+import com.moodleV2.Academia.dto.StudentDtoUpdate;
 import com.moodleV2.Academia.exceptions.*;
 import com.moodleV2.Academia.models.Ciclu;
 import com.moodleV2.Academia.models.Disciplina;
@@ -11,14 +14,15 @@ import com.moodleV2.Academia.models.Student;
 import com.moodleV2.Academia.repositories.DisciplinaRepository;
 import com.moodleV2.Academia.repositories.ProfesorRepository;
 import com.moodleV2.Academia.repositories.StudentRepository;
-import org.hibernate.validator.internal.constraintvalidators.bv.EmailValidator;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.moodleV2.Academia.service.DataValidators.emailValidator;
@@ -80,9 +84,11 @@ public class StudentService {
         }
 
         if (profId != null) {
+            // FIXME: should i return an empty page?
             Profesor profesor = profesorRepository.findById(profId)
                     .orElseThrow(() -> new ProfesorNotFoundException(profId));
 
+            // FIXME: should i return an empty page?
             if (profesor.isArhivat() != arhivat) {
                 throw new ProfesorNotFoundException(profId);
             }
