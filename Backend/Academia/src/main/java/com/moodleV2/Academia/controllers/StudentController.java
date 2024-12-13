@@ -1,5 +1,6 @@
 package com.moodleV2.Academia.controllers;
 
+import com.moodleV2.Academia.dto.DisciplinaDto;
 import com.moodleV2.Academia.dto.StudentDto;
 import com.moodleV2.Academia.dto.StudentDtoCreateNew;
 import com.moodleV2.Academia.dto.StudentDtoUpdate;
@@ -13,10 +14,7 @@ import com.moodleV2.Academia.service.StudentService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.hateoas.IanaLinkRelations;
-import org.springframework.hateoas.Link;
-import org.springframework.hateoas.PagedModel;
+import org.springframework.hateoas.*;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -224,8 +222,18 @@ public class StudentController {
         return ResponseEntity.ok(pagedModel);
     }
 
+    
     // TODO: get student courses
+    @GetMapping("/studenti/{id}/disciplines")
+    ResponseEntity<?> getMyDisciplines(@PathVariable Long id) {
 
-    // TODO: add link to discipline
+        List<EntityModel<DisciplinaDto>> disciplines = service.getMyDisciplines(id);
+
+        CollectionModel<EntityModel<DisciplinaDto>> collectionModel = CollectionModel.of(disciplines);
+
+        collectionModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
+
+        return ResponseEntity.ok(collectionModel);
+    }
 
 }

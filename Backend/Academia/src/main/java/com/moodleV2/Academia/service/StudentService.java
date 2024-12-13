@@ -1,5 +1,6 @@
 package com.moodleV2.Academia.service;
 
+import com.moodleV2.Academia.controllers.DisciplinaModelAssembler;
 import com.moodleV2.Academia.controllers.StudentModelAssembler;
 import com.moodleV2.Academia.dto.*;
 import com.moodleV2.Academia.exceptions.*;
@@ -17,10 +18,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Service;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.moodleV2.Academia.service.DataValidators.emailValidator;
@@ -34,12 +32,14 @@ public class StudentService {
     private final StudentModelAssembler assembler;
     private final DisciplinaRepository disciplinaRepository;
     private final ProfesorRepository profesorRepository;
+    private final DisciplinaModelAssembler assemblerDisciplina;
 
-    public StudentService(StudentRepository studentRepository, StudentModelAssembler assembler, DisciplinaRepository disciplinaRepository, ProfesorRepository profesorRepository) {
+    public StudentService(StudentRepository studentRepository, StudentModelAssembler assembler, DisciplinaRepository disciplinaRepository, ProfesorRepository profesorRepository, DisciplinaModelAssembler assemblerDisciplina) {
         this.studentRepository = studentRepository;
         this.assembler = assembler;
         this.disciplinaRepository = disciplinaRepository;
         this.profesorRepository = profesorRepository;
+        this.assemblerDisciplina = assemblerDisciplina;
     }
 
     public Page<Student> studentSearch(Pageable pageable, String nume, String prenume, String email, Ciclu ciclu, Integer an, Integer grupa, Long profId, String codDisciplina, boolean arhivat) {
@@ -267,5 +267,27 @@ public class StudentService {
         studentRepository.save(student);
 
         return student;
+    }
+
+    public List<EntityModel<DisciplinaDto>> getMyDisciplines(Long id) {
+
+        if (id > 10000 || id < 0) {
+            throw new IndexOutOfBoundsException();
+        }
+
+        Student student = studentRepository.findById(id)
+                .orElseThrow(() -> new StudentNotFoundException("Student with id { " +
+                        id + " } was not found."));
+
+        if (student.isArhivat()) {
+            throw new StudentNotFoundException("Student with id { " +
+                    id + " } was not found.");
+        }
+
+        return student.getClasses()
+                .stream()
+                .filter(disciplina -> !disciplina.isArhivat())
+                .map(assemblerDisciplina::toModel)
+                .toList();
     }
 }
