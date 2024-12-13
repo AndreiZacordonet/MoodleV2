@@ -438,6 +438,14 @@ public class ProfesorController {
     }
 
 
+    /**
+     * Retrieve all courses specified by a professor identifier.
+     *
+     * @param id The unique identifier of the professor. Must be a positive integer.
+     * @return A list of all disciplines, represented as {@code DisciplinaDto} objects.
+     * @throws ProfesorNotFoundException if no professor is found with the provided identifier.
+     * @throws IndexOutOfBoundsException if the identifier is outside the valid range.
+     */
     @GetMapping("/profesori/{id}/all-disciplines")
     @Operation(summary = "Retrieve all courses.",
             description = "Retrieve all courses specified by a professor identifier.")
@@ -462,7 +470,23 @@ public class ProfesorController {
 
 
     // TODO: get all students?
+    /**
+     * Retrieve all students enrolled to a professor's courses.
+     *
+     * @param id The unique identifier of the professor. Must be a positive integer.
+     * @return A list of all students enrolled to all professor's courses, represented as {@code StudentDto} objects.
+     * @throws ProfesorNotFoundException if no professor is found with the provided identifier.
+     * @throws IndexOutOfBoundsException if the identifier is outside the valid range.
+     */
     @GetMapping("/profesori/{id}/studenti")
+    @Operation(summary = "Retrieve students.",
+            description = "Retrieve all students enrolled to a professor's courses.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+            @ApiResponse(responseCode = "404", description = "Professor not found"),
+            @ApiResponse(responseCode = "416", description = "Invalid identifier")
+    })
+    @Parameter(name = "id", description = "Professor unique code", example = "2")
     ResponseEntity<?> getStudenti(@PathVariable Long id) {
 
         List<EntityModel<StudentDto>> students = service.getMyStudents(id);
