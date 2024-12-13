@@ -232,6 +232,7 @@ public class StudentController {
 
         collectionModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
         collectionModel.add(linkTo(methodOn(StudentController.class).getMyDisciplines(id)).withSelfRel().withType("GET"));
+        collectionModel.add(linkTo(methodOn(StudentController.class).getById(id)).withRel("student").withType("GET"));
 
         return ResponseEntity.ok(collectionModel);
     }

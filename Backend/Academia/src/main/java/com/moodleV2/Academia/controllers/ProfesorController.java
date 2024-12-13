@@ -432,6 +432,7 @@ public class ProfesorController {
 
         collectionModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
         collectionModel.add(linkTo(methodOn(ProfesorController.class).getMyDisciplines(id)).withSelfRel().withType("GET"));
+        collectionModel.add(linkTo(methodOn(ProfesorController.class).getById(id)).withRel("profesor").withType("GET"));
 
         return ResponseEntity.ok(service.getMyDisciplines(id));
     }
@@ -454,6 +455,7 @@ public class ProfesorController {
 
         collectionModel.add(Link.of("/api/academia/discipline").withRel("discipline").withType("GET"));
         collectionModel.add(linkTo(methodOn(ProfesorController.class).getAllDisciplines(id)).withSelfRel().withType("GET"));
+        collectionModel.add(linkTo(methodOn(ProfesorController.class).getById(id)).withRel("profesor").withType("GET"));
 
         return ResponseEntity.ok(collectionModel);
     }
@@ -469,6 +471,7 @@ public class ProfesorController {
 
         collectionModel.add(Link.of("/api/academia/studenti").withRel("studenti").withType("GET"));
         collectionModel.add(linkTo(methodOn(ProfesorController.class).getStudenti(id)).withSelfRel().withType("GET"));
+        collectionModel.add(linkTo(methodOn(ProfesorController.class).getById(id)).withRel("profesor").withType("GET"));
 
         return ResponseEntity.ok(collectionModel);
     }
