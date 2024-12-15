@@ -8,3 +8,7 @@ def square_root(x: float) -> float:
 
 def absolute_value(x: float) -> float:
     return abs(x)
+
+
+def sum(x: float, y: float) -> float:
+    return x + y

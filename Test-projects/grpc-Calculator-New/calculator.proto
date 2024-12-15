@@ -4,8 +4,16 @@ message Number {
     float value = 1;
 }
 
+message SumNumbers {
+    float a = 1;
+    float b = 2;
+}
+
 service Calculator {
+
     rpc SquareRoot(Number) returns (Number) {}
 
     rpc AbsoluteValue(Number) returns (Number) {}
+
+    rpc Sum(SumNumbers) returns (Number) {}
 }

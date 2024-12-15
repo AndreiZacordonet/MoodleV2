@@ -26,6 +26,11 @@ class CalculatorServicer(calculator_pb2_grpc.CalculatorServicer):
         response.value = calculator.absolute_value(request.value)
         return response
 
+    def Sum(self, request, context):
+        response = calculator_pb2.Number()
+        response.value = calculator.sum(request.a, request.b)
+        return response
+
 
 # create a gRPC server
 server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

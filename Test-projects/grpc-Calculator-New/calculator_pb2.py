@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x63\x61lculator.proto\"\x17\n\x06Number\x12\r\n\x05value\x18\x01 \x01(\x02\x32S\n\nCalculator\x12 \n\nSquareRoot\x12\x07.Number\x1a\x07.Number\"\x00\x12#\n\rAbsoluteValue\x12\x07.Number\x1a\x07.Number\"\x00\x62\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x10\x63\x61lculator.proto\"\x17\n\x06Number\x12\r\n\x05value\x18\x01 \x01(\x02\"\"\n\nSumNumbers\x12\t\n\x01\x61\x18\x01 \x01(\x02\x12\t\n\x01\x62\x18\x02 \x01(\x02\x32r\n\nCalculator\x12 \n\nSquareRoot\x12\x07.Number\x1a\x07.Number\"\x00\x12#\n\rAbsoluteValue\x12\x07.Number\x1a\x07.Number\"\x00\x12\x1d\n\x03Sum\x12\x0b.SumNumbers\x1a\x07.Number\"\x00\x62\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -33,6 +33,8 @@ if not _descriptor._USE_C_DESCRIPTORS:
   DESCRIPTOR._loaded_options = None
   _globals['_NUMBER']._serialized_start=20
   _globals['_NUMBER']._serialized_end=43
-  _globals['_CALCULATOR']._serialized_start=45
-  _globals['_CALCULATOR']._serialized_end=128
+  _globals['_SUMNUMBERS']._serialized_start=45
+  _globals['_SUMNUMBERS']._serialized_end=79
+  _globals['_CALCULATOR']._serialized_start=81
+  _globals['_CALCULATOR']._serialized_end=195
 # @@protoc_insertion_point(module_scope)
