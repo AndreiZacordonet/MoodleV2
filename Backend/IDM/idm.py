@@ -1,5 +1,6 @@
 from repository import *
 from exceptions.exceptions import *
+from configurations.database_config import redis_client
 
 
 def authenticate(email: str, password: str) -> str:
@@ -25,11 +26,9 @@ def authenticate(email: str, password: str) -> str:
 
 def validate(token: str) -> (str, str):
 
-    # TODO: check if tolen alreay in blacklist (in redis)
     payload, error_message = decode_token(token)
 
     if error_message is not None:
-        # TODO: add to blacklist
         raise InvalidOrExpiredTokenException(error_message)
 
     sub, role = payload["sub"], payload["role"]

@@ -5,6 +5,8 @@ import jwt
 
 from private_keys.keys import JWT_SECRET
 
+from configurations.database_config import redis_client
+
 
 def hash_password(password: str) -> str:
     hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
@@ -38,13 +40,18 @@ def check_credentials(password: str, user) -> bool or None:
 
 def decode_token(token: str) -> (dict, str):
 
+    if redis_client.exists(token):
+        return None, "Token is blacklisted."
+
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
 
         return payload, None
 
     except jwt.ExpiredSignatureError:
+        redis_client.set(token, "expired", ex=3600 * 72)  # store token for 3 days
         return None, "Expired token."
 
     except jwt.InvalidTokenError:
+        redis_client.set(token, "invalid", ex=3600 * 24)  # store token for 1 day
         return None, "Invalid token."
