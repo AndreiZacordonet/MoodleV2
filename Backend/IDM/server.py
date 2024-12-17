@@ -37,6 +37,20 @@ class IdmServicer(idm_pb2_grpc.IdmServicer):
         except InvalidOrExpiredTokenException as e:
             context.abort(grpc.StatusCode.UNAUTHENTICATED, str(e))
 
+    def Destroy(self, request, context):
+
+        response = idm_pb2.DestroyResponse()
+
+        success = idm.destroy(request.token)
+
+        if success:
+            response.success = "Token successfully invalidated."
+
+            return response
+
+        else:
+            context.abort(grpc.StatusCode.ALREADY_EXISTS, "Token already invalidated.")
+
 
 server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
 

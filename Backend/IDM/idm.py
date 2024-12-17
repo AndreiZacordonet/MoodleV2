@@ -34,3 +34,13 @@ def validate(token: str) -> (str, str):
     sub, role = payload["sub"], payload["role"]
 
     return sub, role
+
+
+def destroy(token: str) -> bool:
+
+    if redis_client.exists(token):
+        return False
+
+    redis_client.set(token, "destroyed", ex=3600 * 72)
+
+    return True

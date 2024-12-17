@@ -9,7 +9,7 @@ def run():
 
         while True:
 
-            print("\nEnter commnad: login / validate / exit:")
+            print("\nEnter command: login / validate / exit / destroy :")
             command = input("> ").strip()
 
             if command.lower() == "exit":
@@ -43,6 +43,18 @@ def run():
                     response = stub.Validate(request)
 
                     print(f"Response:\nSub: {response.sub}\tRole: {response.role}")
+                except grpc.RpcError as e:
+                    print(f"Error: {e.code()} - {e.details()}")
+
+            elif command.lower() == "destroy":
+                print("\nEnter jwt")
+                jwt = input("jwt: ").strip()
+
+                try:
+                    request = idm_pb2.ValidateOrDestroyRequest(token=jwt)
+                    response = stub.Destroy(request)
+
+                    print(f"Response: {response.success}")
                 except grpc.RpcError as e:
                     print(f"Error: {e.code()} - {e.details()}")
 
