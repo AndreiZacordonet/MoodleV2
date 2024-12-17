@@ -1,0 +1,30 @@
+from repository import *
+from exceptions.exceptions import *
+
+
+def authenticate(email: str, password: str) -> str:
+    """
+    Checks email and password integrity.
+    """
+    # TODO: validate email, validate password
+
+    user = get_user_by_email(email)
+
+    if user is None:
+        raise UserNotFoundException(f"No user with email {email} was found.")
+
+    is_valid = check_credentials(password, user)
+
+    if not is_valid:
+        raise InvalidCredentialsException("Invalid credentials.")
+
+    token = generate_token(user)
+
+    return token
+
+
+
+
+
+
+
