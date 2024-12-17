@@ -23,8 +23,15 @@ def authenticate(email: str, password: str) -> str:
     return token
 
 
+def validate(token: str) -> (str, str):
 
+    # TODO: check if tolen alreay in blacklist (in redis)
+    payload, error_message = decode_token(token)
 
+    if error_message is not None:
+        # TODO: add to blacklist
+        raise InvalidOrExpiredTokenException(error_message)
 
+    sub, role = payload["sub"], payload["role"]
 
-
+    return sub, role

@@ -34,3 +34,17 @@ def check_credentials(password: str, user) -> bool or None:
         return True if hash_password(password) == user.password else False
     else:
         return None
+
+
+def decode_token(token: str) -> (dict, str):
+
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+
+        return payload, None
+
+    except jwt.ExpiredSignatureError:
+        return None, "Expired token."
+
+    except jwt.InvalidTokenError:
+        return None, "Invalid token."

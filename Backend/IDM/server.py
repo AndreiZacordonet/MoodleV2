@@ -11,15 +11,30 @@ from exceptions.exceptions import *
 class IdmServicer(idm_pb2_grpc.IdmServicer):
 
     def Authenticate(self, request, context):
+
         response = idm_pb2.AuthResponse()
 
         try:
             response.token = idm.authenticate(request.email, request.password)
 
             return response
+
         except UserNotFoundException as e:
             context.abort(grpc.StatusCode.NOT_FOUND, str(e))
+
         except InvalidCredentialsException as e:
+            context.abort(grpc.StatusCode.UNAUTHENTICATED, str(e))
+
+    def Validate(self, request, context):
+
+        response = idm_pb2.ValidateResponse()
+
+        try:
+            response.sub, response.role = idm.validate(request.token)
+
+            return response
+
+        except InvalidOrExpiredTokenException as e:
             context.abort(grpc.StatusCode.UNAUTHENTICATED, str(e))
 
 

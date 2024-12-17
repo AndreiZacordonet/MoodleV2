@@ -6,3 +6,4 @@ with database:
     database.create_tables([Auth])
 
     save_auth("andrei74c0@gmail.com", "pass1234", Roles.ADMIN)
+    save_auth("shaqoniq@bingxilling.com", "pass1234", Roles.STUDENT)

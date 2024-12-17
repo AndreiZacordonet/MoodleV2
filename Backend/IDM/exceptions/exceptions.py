@@ -5,3 +5,7 @@ class UserNotFoundException(Exception):
 
 class InvalidCredentialsException(Exception):
     pass
+
+
+class InvalidOrExpiredTokenException(Exception):
+    pass
