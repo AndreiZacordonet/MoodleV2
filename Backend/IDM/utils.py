@@ -4,14 +4,14 @@ import uuid
 import jwt
 import re
 
-from private_keys.keys import JWT_SECRET
+from private_keys.keys import JWT_SECRET, NONCE
 
 from configurations.database_config import redis_client
 
 
 def hash_password(password: str) -> str:
     hashed_password = hashlib.md5(password.encode('utf-8')).hexdigest()
-    return hashed_password + "1A4"
+    return hashed_password + NONCE
 
 
 def generate_token(user) -> str:
