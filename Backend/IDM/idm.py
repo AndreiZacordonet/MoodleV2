@@ -7,7 +7,16 @@ def authenticate(email: str, password: str) -> str:
     """
     Checks email and password integrity.
     """
-    # TODO: validate email, validate password
+    # Validate email format
+    if not validate_email(email):
+        raise ValueError("Invalid email format.")
+
+    # Validate password strength
+    if not validate_password(password):
+        raise ValueError(
+            "Password must be at least 8 characters long, contain at least one uppercase letter, "
+            "one lowercase letter, one digit, and one special character."
+        )
 
     user = get_user_by_email(email)
 

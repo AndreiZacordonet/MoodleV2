@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import uuid
 import jwt
+import re
 
 from private_keys.keys import JWT_SECRET
 
@@ -55,3 +56,31 @@ def decode_token(token: str) -> (dict, str):
     except jwt.InvalidTokenError:
         redis_client.set(token, "invalid", ex=3600 * 24)  # store token for 1 day
         return None, "Invalid token."
+
+
+def validate_email(email: str) -> bool:
+    """
+    Validates the email format using a regular expression.
+    """
+    email_regex = r"(^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$)"
+    return re.match(email_regex, email) is not None
+
+
+def validate_password(password: str) -> bool:
+    """
+    Validates the password based on strength criteria:
+    - Minimum 8 characters
+    - At least one uppercase letter
+    - At least one lowercase letter
+    - At least one digit
+    - At least one special character
+    """
+    if len(password) < 8:
+        return False
+
+    has_upper = any(char.isupper() for char in password)
+    has_lower = any(char.islower() for char in password)
+    has_digit = any(char.isdigit() for char in password)
+    has_special = any(char in "!@#$%^&*()-_=+[{]}|;:'\",<.>/?`~" for char in password)
+
+    return has_upper and has_lower and has_digit and has_special

@@ -25,6 +25,9 @@ class IdmServicer(idm_pb2_grpc.IdmServicer):
         except InvalidCredentialsException as e:
             context.abort(grpc.StatusCode.UNAUTHENTICATED, str(e))
 
+        except ValueError as e:
+            context.abort(grpc.StatusCode.INVALID_ARGUMENT, str(e))
+
     def Validate(self, request, context):
 
         response = idm_pb2.ValidateResponse()
