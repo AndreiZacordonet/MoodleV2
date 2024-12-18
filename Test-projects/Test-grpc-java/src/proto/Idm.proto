@@ -1,0 +1,90 @@
+syntax = "proto3"; /* default is proto2 */
+
+option java_package = "proto";
+
+message AuthRequest {
+  string email = 1;
+  string password = 2;
+}
+
+message AuthResponse {
+  string token = 1;
+}
+
+
+message ValidateOrDestroyRequest {
+  string token = 1;
+}
+
+message ValidateResponse {
+  string sub = 1;
+  string role = 2;
+}
+
+message DestroyResponse {
+  string success = 1;
+}
+
+
+service Idm {
+
+  rpc Authenticate(AuthRequest) returns (AuthResponse);
+
+  rpc Validate(ValidateOrDestroyRequest) returns (ValidateResponse);
+
+  rpc Destroy(ValidateOrDestroyRequest) returns (DestroyResponse);
+
+}
+
+//message Number {
+//  float value = 1;
+//}
+//
+//message SumNumbers {
+//  float a = 1;
+//  float b = 2;
+//}
+//
+//service Calculator {
+//
+//  rpc SquareRoot(Number) returns (Number) {}
+//
+//  rpc AbsoluteValue(Number) returns (Number) {}
+//
+//  rpc Sum(SumNumbers) returns (Number) {}
+//}
+
+//service Greeter {
+//  rpc SayHello (HelloRequest) returns (HelloReply) {}
+//}
+//
+//message HelloRequest {
+//  /*type   name = id; */
+//  string name = 1; /* Id must be bigger than 0 and be the same on client and server */
+//}
+//
+//message HelloReply {
+//  string message = 1;
+//}
+
+
+//syntax = "proto3";
+//
+//option java_multiple_files = true;
+//
+//package dev.zaco.grpc;
+//
+//
+//message HelloRequest {
+//  string firstName = 1;
+//  string lastName = 2;
+//}
+//
+//message HelloResponse {
+//  string response = 1;
+//}
+//
+//service HelloService {
+//  rpc hello(HelloRequest) returns (HelloResponse);
+//}
+
