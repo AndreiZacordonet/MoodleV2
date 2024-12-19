@@ -72,6 +72,8 @@ public class ProfesorController {
             description = "Specific filtering can be applied, the result is shown in a page based on selected preferences.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "416", description = "Pagination parameters not in range"),
             @ApiResponse(responseCode = "422", description = "Sorting parameters not valid")
     })
@@ -145,6 +147,8 @@ public class ProfesorController {
             description = "Searches by the provided professor-code.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
@@ -181,6 +185,8 @@ public class ProfesorController {
             description = "Using the sent data, checks for its correctness and proceeds to create and store the new professor.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Professor created successfully", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "406", description = "Parameter format is not correct"),
             @ApiResponse(responseCode = "409", description = "Professor email already exists"),
             @ApiResponse(responseCode = "422", description = "Professor data is invalid")
@@ -213,6 +219,8 @@ public class ProfesorController {
             description = "Using the provided code, it will switch the archive flag thus marking it as being archived.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully archived"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
@@ -259,6 +267,8 @@ public class ProfesorController {
             description = "Provided fields, if syntactically and logically correct, will be updated.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved", content = @Content(schema = @Schema(implementation = ProfesorDto.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "409", description = "Professor email already exists"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier"),
@@ -305,6 +315,8 @@ public class ProfesorController {
             description = "If the provided code is correct, marks the course as being active by switching the archive flag.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
@@ -354,6 +366,8 @@ public class ProfesorController {
             description = "Specific filtering can be applied, the result is shown in a page based on selected preferences.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "416", description = "Pagination parameters not in range"),
             @ApiResponse(responseCode = "422", description = "Sorting parameters not valid")
     })
@@ -427,6 +441,8 @@ public class ProfesorController {
             description = "Retrieve all courses specified by a professor identifier.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
@@ -458,6 +474,8 @@ public class ProfesorController {
             description = "Retrieve all courses specified by a professor identifier.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
@@ -490,6 +508,8 @@ public class ProfesorController {
             description = "Retrieve all students enrolled to a professor's courses.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Professor not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })

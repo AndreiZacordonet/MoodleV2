@@ -73,6 +73,8 @@ public class DisciplinaController {
             description = "Specific filtering can be applied, the result is shown in a page based on selected preferences.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "416", description = "Pagination parameters not in range"),
             @ApiResponse(responseCode = "422", description = "Sorting parameters not valid")
     })
@@ -174,6 +176,8 @@ public class DisciplinaController {
             description = "Searches by the provided class-code.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved", content = @Content(schema = @Schema(implementation = DisciplinaDto.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Class not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
@@ -210,6 +214,8 @@ public class DisciplinaController {
             description = "Using the sent data, checks for its correctness and proceeds to create and store the new course.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Course created successfully", content = @Content(schema = @Schema(implementation = DisciplinaDto.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "409", description = "Course code already exists"),
             @ApiResponse(responseCode = "422", description = "Course data is invalid")
     })
@@ -239,6 +245,8 @@ public class DisciplinaController {
             description = "Using the provided code, it will switch the archive flag thus marking it as being archived.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully archived"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Course not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
@@ -282,6 +290,8 @@ public class DisciplinaController {
             description = "Provided fields, if syntactically and logically correct, will be updated.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved", content = @Content(schema = @Schema(implementation = DisciplinaDto.class))),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Course not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier"),
             @ApiResponse(responseCode = "422", description = "Course data is invalid")
@@ -325,6 +335,8 @@ public class DisciplinaController {
             description = "If the provided code is correct, marks the course as being active by switching the archive flag.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully un-archived"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "404", description = "Course not found"),
             @ApiResponse(responseCode = "416", description = "Invalid identifier")
     })
@@ -372,6 +384,8 @@ public class DisciplinaController {
             description = "Specific filtering can be applied, the result is shown in a page based on selected preferences.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved"),
+            @ApiResponse(responseCode = "401", description = "Invalid or expired token"),
+            @ApiResponse(responseCode = "403",description = "Access is forbidden"),
             @ApiResponse(responseCode = "416", description = "Pagination parameters not in range"),
             @ApiResponse(responseCode = "422", description = "Sorting parameters not valid")
     })
