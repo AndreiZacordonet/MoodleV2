@@ -1,6 +1,5 @@
 package com.moodleV2.Academia.jwt_security;
 
-import com.moodleV2.Academia.controllers.JwtValidationFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

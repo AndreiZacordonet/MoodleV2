@@ -1,9 +1,5 @@
-package com.moodleV2.Academia.controllers;
+package com.moodleV2.Academia.jwt_security;
 
-import ch.qos.logback.core.net.SyslogOutputStream;
-import com.moodleV2.Academia.jwt_security.GrpcClientService;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -12,11 +8,6 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-
-import org.hibernate.boot.model.source.spi.SizeSource;
-import org.springframework.stereotype.Component;
-import proto.IdmGrpc;
-import proto.IdmOuterClass;
 
 //import javax.servlet.annotation.WebFilter;
 import java.io.IOException;
