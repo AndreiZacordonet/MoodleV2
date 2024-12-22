@@ -71,7 +71,7 @@ public class StudentService {
         Set<Long> ids = new HashSet<>();
         if (codDisciplina != null) {
             Disciplina disciplina = disciplinaRepository.findById(codDisciplina)
-                    .orElseThrow(() -> new DisciplinaNotFoundException(codDisciplina));
+                    .orElseThrow(() -> new DisciplinaNotFoundException(codDisciplina));     // FIXME: this should not throw error?
             if (disciplina.isArhivat() == arhivat) {
                 ids = studentRepository.searchStudentsByClasses(disciplina)
                         .stream()
@@ -86,11 +86,11 @@ public class StudentService {
         if (profId != null) {
             // FIXME: should i return an empty page?
             Profesor profesor = profesorRepository.findById(profId)
-                    .orElseThrow(() -> new ProfesorNotFoundException(profId));
+                    .orElseThrow(() -> new ProfesorNotFoundException(profId));      // FIXME: this should not throw error?
 
             // FIXME: should i return an empty page?
             if (profesor.isArhivat() != arhivat) {
-                throw new ProfesorNotFoundException(profId);
+                throw new ProfesorNotFoundException(profId);        // FIXME: this should not throw error?
             }
 
             List<Disciplina> disciplinas = disciplinaRepository.findByIdTitular(profesor);

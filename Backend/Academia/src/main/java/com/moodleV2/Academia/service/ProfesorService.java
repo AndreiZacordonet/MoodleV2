@@ -57,6 +57,8 @@ public class ProfesorService {
 
         emailValidator(email,
                 () -> new SearchParamException("Professor email search parameter { " + email + " } is not valid."));
+
+        // FIXME: is this validation OK??
         if (profesorRepository.existsProfesorByEmail(email)) {
             throw new ResourceAlreadyExistsException("Email { " + email + " } already exists.");
         }
