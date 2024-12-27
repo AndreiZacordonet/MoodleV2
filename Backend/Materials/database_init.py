@@ -8,16 +8,14 @@ course_data = [
             {"type": EvaluationTypes.FINAL_EXAM.name, "weight": 50},
             {"type": EvaluationTypes.LAB_ACTIVITY.name, "weight": 50},
         ],
-        "materials": {
-            "course": [
-                {"number": 1, "file": "ciorba_de_vacuta_aerodinamica.pdf"},
-                {"number": 2, "file": "ciorba_de_vacuta_aerodinamica2.pdf"},
-                {"number": 3, "file": "ecuatii_diferentiale_lichide.pdf"},
-            ],
-            "lab": [
-                {"number": 1, "file": "namaletfai.txt"},
-            ]
-        }
+        "course": [
+            {"number": 1, "file": "ciorba_de_vacuta_aerodinamica.pdf"},
+            {"number": 2, "file": "ciorba_de_vacuta_aerodinamica2.pdf"},
+            {"number": 3, "file": "ecuatii_diferentiale_lichide.pdf"},
+        ],
+        "lab": [
+            {"number": 1, "file": "namaletfai.txt"},
+        ]
     },
 
     {
@@ -27,16 +25,14 @@ course_data = [
             {"type": EvaluationTypes.LAB_ACTIVITY.name, "weight": 10},
             {"type": EvaluationTypes.PROJECT.name, "weight": 30},
         ],
-        "materials": {
-            "course": [
-                {"number": 1, "file": "nambani.pdf"},
-                {"number": 2, "file": "iarnambani.pdf"},
-                {"number": 3, "file": "namcefacecuviatamea.pdf"},
-            ],
-            "lab": [
-                {"number": 1, "file": "numiaplacutdeloclalaboratorlamn.txt"},
-            ]
-        }
+        "course": [
+            {"number": 1, "file": "nambani.pdf"},
+            {"number": 2, "file": "iarnambani.pdf"},
+            {"number": 3, "file": "namcefacecuviatamea.pdf"},
+        ],
+        "lab": [
+            {"number": 1, "file": "numiaplacutdeloclalaboratorlamn.txt"},
+        ]
     },
 ]
 

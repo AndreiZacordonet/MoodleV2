@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Body
 from pymongo.errors import DuplicateKeyError
 
 from database_config import course_data_collection
-from models import CourseCreateRequest
+from models import CourseCreateRequest, Material
 
 course_router = APIRouter()
 
@@ -46,20 +46,25 @@ async def create(course: CourseCreateRequest):
     if sum(item.weight for item in course.evaluation) > 100:
         raise HTTPException(status_code=400, detail="Sum of evaluation weights exceeds 100.")
 
-    course_data = {
-        "code": course.code,
-        "evaluation": [{"type": e["type"], "weight": e["weight"]} for e in course.evaluation],
-        "materials": {
-            "course": course.materials.course,
-            "lab": course.materials.lab
-        }
-    }
-
     try:
-        result = course_data_collection.insert_one(course_data)
-        return {"message": "Course created successfully.", "id": str(result.inserted_id)}
+        result = course_data_collection.insert_one(course.serialize_course())
+
+        return {"message": "Course created successfully.", "_id": str(result.inserted_id)}
     except DuplicateKeyError:
         raise HTTPException(status_code=400, detail=f"Course with code '{course.code}' already exists.")
+
+
+@course_router.post("/{code}/course")
+async def add_course_materials(code: str, course: Material):
+    result = course_data_collection.update_one(
+        {"code": code},
+        {"$set": course}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+
+    return {"message": "Field added successfully.", "modified_count": result.modified_count}
 
 
 @course_router.delete("/{code}")

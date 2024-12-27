@@ -1,6 +1,6 @@
 from enum import Enum
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Optional, Any
 
 
 class EvaluationTypes(Enum):
@@ -20,13 +20,27 @@ class Material(BaseModel):
     file: str
 
 
-class Materials(BaseModel):
-    course: Optional[List[Material]] = []
-    lab: Optional[List[Material]] = []
-
-
 class CourseCreateRequest(BaseModel):
     code: str
     evaluation: List[Evaluation]
-    materials: Materials = Materials()
+    course: Optional[List[Material]] = [
+        {
+          "number": 0,
+          "file": "string"
+        }
+    ]
+    lab: Optional[List[Material]] = [
+        {
+          "number": 0,
+          "file": "string"
+        }
+    ]
+
+    def serialize_course(self):
+        return {
+            "code": self.code,
+            "evaluation": [{"type": e.type, "weight": e.weight} for e in self.evaluation],
+            "course": [m.model_dump() if isinstance(m, Material) else m for m in self.course],
+            "lab": [m.model_dump() if isinstance(m, Material) else m for m in self.lab],
+        }
 
