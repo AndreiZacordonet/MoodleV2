@@ -3,12 +3,15 @@ from typing import List, Optional, Set
 
 from bson.json_util import dumps
 
-from fastapi import APIRouter, HTTPException, Body
+from fastapi import APIRouter, HTTPException, Body, Query, UploadFile
 from pymongo.errors import DuplicateKeyError
 
 from database_config import course_data_collection
 from models import CourseCreateRequest, Material, Evaluation
 from service import check_formula
+
+from pathlib import Path
+import os
 
 course_router = APIRouter()
 
@@ -73,6 +76,45 @@ async def add_course_materials(code: str, materials: List[Material]):
     result = course_data_collection.update_one({"code": code}, {"$set": {"course": list(combined_materials)}})
 
     return {"message": "Field added successfully.", "modified_count": result.modified_count}
+
+
+@course_router.post("/{code}/{course_number}/upload-course")
+async def upload_course_file(code: str, course_number: int, course_file: UploadFile):
+    # TODO: input validation
+
+    # file path naming: path-to-course/{code}/courses/course_file
+
+    document = course_data_collection.find_one({"code": code}, {"_id": 0, "course": 1})
+
+    if not document:
+        raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+
+    # this operation changes the original course name with the name of the uploaded file
+    # TODO: update course_name in the database
+    course_name, extention = os.path.splitext(course_file.filename)     # dont include file extention
+
+    courses = document.get("course", [])
+
+    for course in courses:
+        if course.get("number") == course_number:
+            course["file"] = course_name
+            break
+
+    result = course_data_collection.update_one({"code": code}, {"$set": {"course": courses}})
+
+    # if result.modified_count == 0:
+    #     raise Exception("something is wrong, I can feel it")
+
+    # TODO: delete the older file if exists
+    file_path = Path("files") / code / "courses" / str(course_number) / (course_name + extention)
+    file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(file_path, "wb") as f:
+        content = await course_file.read()
+        f.write(content)
+
+    return {"message": "File added successfully.", "modified_count": result.modified_count}
+
 
 
 @course_router.post("/{code}/lab")
@@ -224,4 +266,16 @@ async def update_evaluation(code: str, evaluation: List[Evaluation]):
                                                {"$set": {"evaluation": [eva.model_dump() for eva in evaluation]}})
 
     return {"message": "Evaluation method updated successfully.", "modified_count": result.modified_count}
+
+
+@course_router.get("/{code/courses")
+async def get_course_file(code: str, course_file_name: str = Query()):
+
+    document = course_data_collection.find_one({"code": code}, {"_id": 0})
+    if not document:
+        raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+
+
+
+
 
