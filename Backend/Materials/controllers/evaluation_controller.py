@@ -1,5 +1,5 @@
 import json
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from bson.json_util import dumps
 
@@ -54,15 +54,24 @@ async def create(course: CourseCreateRequest):
         raise HTTPException(status_code=400, detail=f"Course with code '{course.code}' already exists.")
 
 
-@course_router.post("/{code}/course")
-async def add_course_materials(code: str, course: Material):
-    result = course_data_collection.update_one(
-        {"code": code},
-        {"$set": course}
-    )
+@course_router.post("/{code}/materials")
+async def add_course_materials(code: str, is_course: bool, materials: List[Material]):
+    # TODO: input validation
 
-    if result.matched_count == 0:
+    document = course_data_collection.find_one({"code": code}, {"_id": 0})
+
+    if not document:
         raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+
+    course_or_lab = "course" if is_course else "lab"
+
+    existing_materials = document.get("course_or_lab")
+
+    new_materials = [material.model_dump() for material in materials]
+
+    combined_materials = {tuple(material.items()): material for material in existing_materials + new_materials}.values()
+
+    result = course_data_collection.update_one({"code": code}, {"$set": {course_or_lab: list(combined_materials)}})
 
     return {"message": "Field added successfully.", "modified_count": result.modified_count}
 
