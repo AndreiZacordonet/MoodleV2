@@ -1,36 +1,47 @@
+import time
+
 from repository import *
 from exceptions.exceptions import *
-from configurations.database_config import redis_client
+from configurations.database_config import redis_client, database
 
 
 def authenticate(email: str, password: str) -> str:
     """
     Checks email and password integrity.
     """
-    # Validate email format
-    if not validate_email(email):
-        raise ValueError("Invalid email format.")
+    for _ in range(3):
+        try:
+            # Validate email format
+            if not validate_email(email):
+                raise ValueError("Invalid email format.")
 
-    # Validate password strength
-    if not validate_password(password):
-        raise ValueError(
-            "Password must be at least 8 characters long, contain at least one uppercase letter, "
-            "one lowercase letter, one digit, and one special character."
-        )
+            # Validate password strength
+            if not validate_password(password):
+                raise ValueError(
+                    "Password must be at least 8 characters long, contain at least one uppercase letter, "
+                    "one lowercase letter, one digit, and one special character."
+                )
 
-    user = get_user_by_email(email)
+            print("veificam db")
+            if database.is_closed():
+                print("deschidem db")
+                database.connect()
 
-    if user is None:
-        raise UserNotFoundException(f"No user with email {email} was found.")
+            user = get_user_by_email(email)
+            print(f"User: {user}")
 
-    is_valid = check_credentials(password, user)
+            if user is None:
+                raise UserNotFoundException(f"No user with email {email} was found.")
 
-    if not is_valid:
-        raise InvalidCredentialsException("Invalid credentials.")
+            is_valid = check_credentials(password, user)
+            if not is_valid:
+                raise InvalidCredentialsException("Invalid credentials.")
 
-    token = generate_token(user)
-
-    return token
+            return generate_token(user)
+        finally:
+            if not database.is_closed():
+                database.close()
+            time.sleep(1)
 
 
 def validate(token: str) -> (str, str):
