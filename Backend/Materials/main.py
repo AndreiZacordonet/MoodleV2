@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from controllers.evaluation_controller import course_router
+from evaluation_controller import course_router
 
 app = FastAPI()
 
