@@ -1,9 +1,12 @@
 import json
+import mimetypes
 from typing import List, Optional, Set
 
 from bson.json_util import dumps
 
 from fastapi import APIRouter, HTTPException, Body, Query, UploadFile
+from fastapi.responses import FileResponse
+
 from pymongo.errors import DuplicateKeyError
 
 from database_config import course_data_collection
@@ -268,14 +271,26 @@ async def update_evaluation(code: str, evaluation: List[Evaluation]):
     return {"message": "Evaluation method updated successfully.", "modified_count": result.modified_count}
 
 
-@course_router.get("/{code/courses")
-async def get_course_file(code: str, course_file_name: str = Query()):
+@course_router.get("/{code}/courses/{course_number}")
+async def get_course_file(code: str, course_number: str):
 
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
     if not document:
         raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
 
+    path = Path("files") / code / "courses" / course_number
 
+    if not path.exists() or not path.is_dir():
+        raise FileNotFoundError(f"Directory {path} does not exist.")
 
+    file = list(path.iterdir())[0]
 
+    if not file:
+        raise FileNotFoundError(f"No files found in directory {path}.")
+
+    mime_type, _ = mimetypes.guess_type(file.name)
+    if mime_type is None:
+        mime_type = "application/octet-stream"
+
+    return FileResponse(file, media_type=mime_type, filename=file.name)
 
