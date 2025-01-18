@@ -73,3 +73,9 @@ async def resource_already_exists_exception_handler(
     request: Request, e: ResourceAlreadyExistsException
 ):
     return body_build(409, "Conflict", e.message, request)
+
+
+async def file_not_valid_exception_handler(
+    request: Request, e: FileNotValidException
+):
+    return body_build(422, "Unprocessable Entity", e.message, request)

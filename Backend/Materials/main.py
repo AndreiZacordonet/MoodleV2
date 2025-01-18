@@ -27,3 +27,4 @@ app.add_exception_handler(MaterialsNotFoundException, materials_not_found_except
 app.add_exception_handler(FileNotFoundError, file_not_found_exception_handler)
 app.add_exception_handler(ResourceAlreadyExistsException, resource_already_exists_exception_handler)
 app.add_exception_handler(FormulaLogicException, formula_logic_exception_handler)
+app.add_exception_handler(FileNotValidException, file_not_valid_exception_handler)

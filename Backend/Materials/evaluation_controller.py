@@ -19,6 +19,10 @@ import os
 
 from web_filter import role_based_filter
 
+
+MAX_FILE_SIZE_MB = 25
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".xlsx", ".pptx"}
+
 course_router = APIRouter()
 
 
@@ -84,6 +88,9 @@ async def create(course: CourseCreateRequest, request: Request, user: dict = Dep
     - `materials`: Optional materials for course and lab files.
     """
 
+    if not course.code or len(course.code) > 20 or course.code.isspace():
+        raise InvalidCourseCodeException(f"Code '{course.code}' is invalid or out of bounds")
+
     if sum(item.weight for item in course.evaluation) != 100:
         raise FormulaLogicException("Sum of evaluation weights is incorrect.")
 
@@ -110,7 +117,10 @@ async def create(course: CourseCreateRequest, request: Request, user: dict = Dep
 
 @course_router.post("/{code}/course")
 async def add_course_materials(code: str, materials: List[Material], request: Request, user: dict = Depends(role_based_filter)):
-    # TODO: check course numbers min 1 max 20 + add new exception for this
+
+    for material in materials:
+        if 20 < material.number < 1:
+            raise InvalidCourseNumberException(f"Course number '{material.number}' is not valid")
 
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
@@ -143,13 +153,21 @@ async def add_course_materials(code: str, materials: List[Material], request: Re
 
 @course_router.post("/{code}/{course_number}/upload-course")
 async def upload_course_file(code: str, course_number: int, course_file: UploadFile, request: Request, user: dict = Depends(role_based_filter)):
-    # todo: check for file dimension (max 25 mb) also check extention
 
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
 
-    if course_number > 20:
+    if 1 > course_number > 20:
         raise InvalidCourseNumberException(f"Course number '{course_number}' out of bounds")
+
+    file_extension = Path(course_file.filename).suffix.lower()
+    if file_extension not in ALLOWED_EXTENSIONS:
+        raise FileNotValidException(f"File extension '{file_extension}' not allowed")
+
+    content = await course_file.read()  # Read file content to calculate size
+    file_size_mb = len(content) / (1024 * 1024)  # Convert to MB
+    if file_size_mb > MAX_FILE_SIZE_MB:
+        raise FileNotValidException(f"File dimension '{file_size_mb}' is bigger than {MAX_FILE_SIZE_MB}")
 
     # file path naming: path-to-course/{code}/courses/course_file
 
@@ -198,7 +216,10 @@ async def upload_course_file(code: str, course_number: int, course_file: UploadF
 
 @course_router.post("/{code}/lab")
 async def add_lab_materials(code: str, materials: List[Material], request: Request, user: dict = Depends(role_based_filter)):
-    # TODO: check course numbers min 1 max 20
+
+    for material in materials:
+        if 20 < material.number < 1:
+            raise InvalidCourseNumberException(f"Course number '{material.number}' is not valid")
 
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
@@ -233,7 +254,9 @@ async def add_lab_materials(code: str, materials: List[Material], request: Reque
 
 @course_router.delete("/{code}/{course_number}/course")
 async def remove_course_material(code: str, course_number: int, request: Request, user: dict = Depends(role_based_filter)):
-    # todo: check course number
+
+    if 20 < course_number < 1:
+        raise InvalidCourseNumberException(f"Course number '{course_number}' is not valid")
 
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
@@ -278,7 +301,9 @@ async def remove_course_material(code: str, course_number: int, request: Request
 
 @course_router.delete("/{code}/{lab_number}/lab")
 async def remove_lab_material(code: str, lab_number: int, request: Request, user: dict = Depends(role_based_filter)):
-    # todo: check lab number max 1 max 20
+
+    if 20 < lab_number < 1:
+        raise InvalidCourseNumberException(f"Course number '{lab_number}' is not valid")
 
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
@@ -472,8 +497,10 @@ async def update_evaluation(code: str, evaluation: List[Evaluation], request: Re
 
 
 @course_router.get("/{code}/courses/{course_number}")
-async def get_course_file(code: str, course_number: str, request: Request, user: dict = Depends(role_based_filter)):
-    # todo: check course_number min 1 max 20
+async def get_course_file(code: str, course_number: int, request: Request, user: dict = Depends(role_based_filter)):
+
+    if 20 < course_number < 1:
+        raise InvalidCourseNumberException(f"Course number '{course_number}' is not valid")
 
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
@@ -482,7 +509,7 @@ async def get_course_file(code: str, course_number: str, request: Request, user:
     if not document:
         raise CourseNotFoundException(f"Course with code '{code}' not found.")
 
-    path = Path("files") / code / "courses" / course_number
+    path = Path("files") / code / "courses" / str(course_number)
 
     if not path.exists() or not path.is_dir():
         raise FileNotFoundError(f"Directory {path} does not exist.")

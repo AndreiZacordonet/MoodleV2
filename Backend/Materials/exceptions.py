@@ -26,3 +26,8 @@ class FormulaLogicException(Exception):
 class ResourceAlreadyExistsException(Exception):
     def __init__(self, message: str):
         self.message = message
+
+
+class FileNotValidException(Exception):
+    def __init__(self, message: str):
+        self.message = message
