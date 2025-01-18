@@ -66,7 +66,7 @@ async def formula_logic_exception_handler(
 async def file_not_found_exception_handler(
     request: Request, e: FileNotFoundError
 ):
-    return body_build(422, "Unprocessable Entity", e.strerror, request)
+    return body_build(404, "Unprocessable Entity", e.strerror, request)
 
 
 async def resource_already_exists_exception_handler(
@@ -79,3 +79,10 @@ async def file_not_valid_exception_handler(
     request: Request, e: FileNotValidException
 ):
     return body_build(422, "Unprocessable Entity", e.message, request)
+
+
+async def file_too_big_exception_handler(
+    request: Request, e: FileTooBigException
+):
+    return body_build(413, "Unprocessable Entity", e.message, request)
+
