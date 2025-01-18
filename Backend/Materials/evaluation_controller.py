@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from pymongo.errors import DuplicateKeyError
 
 from database_config import course_data_collection
+from exceptions import *
 from models import CourseCreateRequest, Material, Evaluation
 from service import check_formula
 
@@ -34,9 +35,12 @@ async def get_all(user: dict = Depends(role_based_filter)):
 @course_router.get("/{code}")
 async def get_by_code(code: str, user: dict = Depends(role_based_filter)):
 
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
     if not document:
-        raise HTTPException(status_code=404, detail="Course not found")
+        raise CourseNotFoundException(f"Course with code '{code}' was not found")
 
     result = json.loads(dumps(document))
 
@@ -53,6 +57,7 @@ async def create(course: CourseCreateRequest, user: dict = Depends(role_based_fi
     """
 
     if sum(item.weight for item in course.evaluation) != 100:
+        # TODO: proper error handling
         raise HTTPException(status_code=400, detail="Sum of evaluation weights is incorrect.")
 
     try:
@@ -60,17 +65,20 @@ async def create(course: CourseCreateRequest, user: dict = Depends(role_based_fi
 
         return {"message": "Course created successfully.", "_id": str(result.inserted_id)}
     except DuplicateKeyError:
+        # TODO: proper error handling
         raise HTTPException(status_code=400, detail=f"Course with code '{course.code}' already exists.")
 
 
 @course_router.post("/{code}/course")
 async def add_course_materials(code: str, materials: List[Material], user: dict = Depends(role_based_filter)):
-    # TODO: input validation
+
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
 
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
 
     if not document:
-        raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+        raise CourseNotFoundException("Course with code '{code}' not found.")
 
     existing_materials = document.get("course")
 
@@ -85,14 +93,19 @@ async def add_course_materials(code: str, materials: List[Material], user: dict 
 
 @course_router.post("/{code}/{course_number}/upload-course")
 async def upload_course_file(code: str, course_number: int, course_file: UploadFile, user: dict = Depends(role_based_filter)):
-    # TODO: input validation
+
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
+    if course_number > 20:
+        raise InvalidCourseNumberException(f"Course number '{course_number}' out of bounds")
 
     # file path naming: path-to-course/{code}/courses/course_file
 
     document = course_data_collection.find_one({"code": code}, {"_id": 0, "course": 1})
 
     if not document:
-        raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+        raise CourseNotFoundException(f"Course with code '{code}' was not found")
 
     # this operation changes the original course name with the name of the uploaded file
     # TODO: update course_name in the database
@@ -125,10 +138,13 @@ async def upload_course_file(code: str, course_number: int, course_file: UploadF
 async def add_course_materials(code: str, materials: List[Material], user: dict = Depends(role_based_filter)):
     # TODO: input validation
 
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
 
     if not document:
-        raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+        raise CourseNotFoundException(f"Course with code '{code}' not found.")
 
     existing_materials = document.get("lab")
 
@@ -145,18 +161,21 @@ async def add_course_materials(code: str, materials: List[Material], user: dict 
 
 @course_router.delete("/{code}/course")
 async def remove_material(code: str, material: Material, user: dict = Depends(role_based_filter)):
-    ### BIG TODO: every file to have in name "_{code}" where code is course unique code
-    ### or maybe stored in a specific folder ###
+    # BIG TODO: every file to have in name "_{code}" where code is course unique code
+    # or maybe stored in a specific folder ###
+
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
 
     if not document:
-        raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+        raise CourseNotFoundException(f"Course with code '{code}' not found.")
 
     existing_materials = document.get("course")
 
     if existing_materials is None:
-        # TODO: create exception for this case
-        raise Exception("The specified course does not have any materials.")
+        raise MaterialsNotFoundException(f"The course '{code}' does not have any materials.")
 
     try:
         print(f'\n\nexisting materilas: {existing_materials}\ndocument: {document}\n\n')
@@ -176,18 +195,21 @@ async def remove_material(code: str, material: Material, user: dict = Depends(ro
 
 @course_router.delete("/{code}/lab")
 async def remove_material(code: str, material: Material, user: dict = Depends(role_based_filter)):
-    ### BIG TODO: every file to have in name "_{code}" where code is course unique code
-    ### or maybe stored in a specific folder ###
+    # BIG TODO: every file to have in name "_{code}" where code is course unique code
+    # or maybe stored in a specific folder ###
+
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
 
     if not document:
-        raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+        raise CourseNotFoundException(f"Course with code '{code}' not found.")
 
     existing_materials = document.get("lab")
 
     if existing_materials is None:
-        # TODO: create exception for this case
-        raise Exception("The specified course does not have any materials.")
+        raise MaterialsNotFoundException(f"The course '{code}' does not have any materials.")
 
     try:
         print(f'\n\nexisting materilas: {existing_materials}\ndocument: {document}\n\n')
@@ -207,10 +229,14 @@ async def remove_material(code: str, material: Material, user: dict = Depends(ro
 
 @course_router.delete("/{code}")
 async def remove_by_code(code: str, user: dict = Depends(role_based_filter)):
+
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
     result = course_data_collection.delete_one({"code": code})
 
     if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Course not found")
+        raise CourseNotFoundException(f"Course with code '{code}' not found")
 
     return {"message": f"Course with code '{code}' has been successfully deleted"}
 
@@ -218,13 +244,16 @@ async def remove_by_code(code: str, user: dict = Depends(role_based_filter)):
 @course_router.get("/{code}/evaluation")
 async def get_evaluation_formula(code: str, user: dict = Depends(role_based_filter)):
 
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
     document = course_data_collection.find_one(
         {"code": code},
         {"_id": 0, "evaluation": 1}
     )
 
     if not document:
-        raise HTTPException(status_code=404, detail="Course not found")
+        raise CourseNotFoundException(f"Course with code '{code}' not found.")
 
     return document
 
@@ -232,13 +261,16 @@ async def get_evaluation_formula(code: str, user: dict = Depends(role_based_filt
 @course_router.get("/{code}/lab")
 async def get_labs(code: str, user: dict = Depends(role_based_filter)):
 
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
     document = course_data_collection.find_one(
         {"code": code},
         {"_id": 0, "lab": 1}
     )
 
     if not document:
-        raise HTTPException(status_code=404, detail="Course not found")
+        raise CourseNotFoundException(f"Course with code '{code}' not found.")
 
     return document
 
@@ -246,27 +278,32 @@ async def get_labs(code: str, user: dict = Depends(role_based_filter)):
 @course_router.get("/{code}/course")
 async def get_courses(code: str, user: dict = Depends(role_based_filter)):
 
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
     document = course_data_collection.find_one(
         {"code": code},
         {"_id": 0, "course": 1}
     )
 
     if not document:
-        raise HTTPException(status_code=404, detail="Course not found")
+        raise CourseNotFoundException(f"Course with code '{code}' not found.")
 
     return document
 
 
 @course_router.post("/{code/evaluation")
 async def update_evaluation(code: str, evaluation: List[Evaluation], user: dict = Depends(role_based_filter)):
-    # TODO: check the code
+
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
     if not document:
-        raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+        raise CourseNotFoundException(f"Course with code '{code}' not found.")
 
     if not check_formula(evaluation):
-        # TODO: create custom exception
-        raise HTTPException(status_code=422, detail="Formula doesnt add up to 100.")
+        raise FormulaLogicException("Formula doesn't add up to 100.")
 
     result = course_data_collection.update_one({"code": code},
                                                {"$set": {"evaluation": [eva.model_dump() for eva in evaluation]}})
@@ -277,9 +314,12 @@ async def update_evaluation(code: str, evaluation: List[Evaluation], user: dict 
 @course_router.get("/{code}/courses/{course_number}")
 async def get_course_file(code: str, course_number: str, user: dict = Depends(role_based_filter)):
 
+    if not code or len(code) > 20 or code.isspace():
+        raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
+
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
     if not document:
-        raise HTTPException(status_code=404, detail=f"Course with code '{code}' not found.")
+        raise CourseNotFoundException(f"Course with code '{code}' not found.")
 
     path = Path("files") / code / "courses" / course_number
 
