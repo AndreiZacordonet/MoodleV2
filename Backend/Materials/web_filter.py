@@ -29,8 +29,8 @@ ALLOWED_ROLES = {
     (re.compile(r"^/api/materials/[^/]+/course$"), "POST"): ["PROFESSOR"],  # add course materials
     (re.compile(r"^/api/materials/[^/]+/\d+/upload-course$"), "POST"): ["PROFESSOR"],  # add (upload) course file
     (re.compile(r"^/api/materials/[^/]+/lab$"), "POST"): ["PROFESSOR"],  # add lab materials
-    (re.compile(r"^/api/materials/[^/]+/course$"), "DELETE"): ["PROFESSOR"],  # delete course material
-    (re.compile(r"^/api/materials/[^/]+/lab$"), "DELETE"): ["PROFESSOR"],  # delete lab material
+    (re.compile(r"^/api/materials/[^/]+/\d+/course$"), "DELETE"): ["PROFESSOR"],  # delete course material
+    (re.compile(r"^/api/materials/[^/]+/\d+/lab$"), "DELETE"): ["PROFESSOR"],  # delete lab material
     (re.compile(r"^/api/materials/[^/]+/evaluation$"), "GET"): ["STUDENT", "PROFESSOR"],  # get evaluation
     (re.compile(r"^/api/materials/[^/]+/lab$"), "GET"): ["STUDENT", "PROFESSOR"],  # get labs
     (re.compile(r"^/api/materials/[^/]+/course$"), "GET"): ["STUDENT", "PROFESSOR"],  # get courses
