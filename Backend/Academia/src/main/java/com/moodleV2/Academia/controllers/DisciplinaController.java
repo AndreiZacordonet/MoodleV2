@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.AfterDomainEventPublication;
 import org.springframework.data.domain.Page;
@@ -26,9 +27,11 @@ import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.IanaLinkRelations;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.PagedModel;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -224,7 +227,42 @@ public class DisciplinaController {
                     mediaType = "application/json",
                     schema = @Schema(implementation = DisciplinaDtoCreateNew.class)
             ))
-    ResponseEntity<?> createNew(@Valid @RequestBody DisciplinaDtoCreateNew newDisciplina) {
+    ResponseEntity<?> createNew(@Valid @RequestBody DisciplinaDtoCreateNew newDisciplina,
+                                HttpServletRequest request) {
+
+        RestTemplate restTemplate = new RestTemplate();
+        String materialsApiUrl = "http://localhost:8001/api/materials/";
+
+        String authorizationHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        if (authorizationHeader == null || authorizationHeader.isBlank()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Authorization header is missing");
+        }
+
+        // Build the request body
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("code", newDisciplina.getCod());
+        requestBody.put("evaluation", List.of(Map.of(
+                "type", "FINAL_EXAM",
+                "weight", 100
+        )));
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.AUTHORIZATION, authorizationHeader);
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> httpEntity = new HttpEntity<>(requestBody, headers);
+
+        // Send POST request
+        ResponseEntity<String> response = restTemplate.exchange(
+                materialsApiUrl,
+                HttpMethod.PUT,
+                httpEntity,
+                String.class
+        );
+
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            return ResponseEntity.status(response.getStatusCode()).body("Failed to communicate with materials API");
+        }
 
         EntityModel<DisciplinaDto> disciplinaDtoEntityModel = service.addDisciplina(newDisciplina);
 
