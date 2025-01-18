@@ -187,6 +187,10 @@ public class DisciplinaController {
     @Parameter(name = "code", description = "Course unique code", example = "MATH69")
     ResponseEntity<?> getByCode(@PathVariable String code) {
 
+        if (code.isEmpty() || code.length() > 20 || code.isBlank()) {
+            throw new IndexOutOfBoundsException();
+        }
+
         Disciplina disciplina = repository.findById(code)
                 .orElseThrow(() -> new DisciplinaNotFoundException(code));
 
