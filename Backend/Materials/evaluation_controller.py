@@ -19,7 +19,6 @@ import os
 
 from web_filter import role_based_filter
 
-
 MAX_FILE_SIZE_MB = 25
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".xlsx", ".pptx"}
 
@@ -29,13 +28,13 @@ course_router = APIRouter()
 @course_router.get("/",
                    summary="Retrieve all courses information.",
                    description="Returns a list of all available courses with their details",
+                   response_model=[Course],
                    responses={
-                        201: {"description": "Course created successfully"},
-                        401: {"description": "Unauthorized access"},
-                        403: {"description": "Forbidden"},
+                       201: {"description": "Course created successfully"},
+                       401: {"description": "Unauthorized access"},
+                       403: {"description": "Forbidden"},
                    })
 async def get_all(request: Request, user: dict = Depends(role_based_filter)):
-
     documents: [Course] = course_data_collection.find({}, {"_id": 0})
 
     result = json.loads(dumps(documents))
@@ -52,9 +51,18 @@ async def get_all(request: Request, user: dict = Depends(role_based_filter)):
     )
 
 
-@course_router.get("/{code}")
+@course_router.get("/{code}",
+                   summary="Retrieve a specific course by its code",
+                   description="Fetch the details of a course using its unique code.",
+                   response_model=Course,
+                   responses={
+                       200: {"description": "Course details retrieved successfully"},
+                       401: {"description": "Unauthorized access"},
+                       403: {"description": "Forbidden"},
+                       404: {"description": "Course not found"},
+                       416: {"description": "Invalid course code"},
+                   })
 async def get_by_code(code: str, request: Request, user: dict = Depends(role_based_filter)):
-
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
 
@@ -79,7 +87,18 @@ async def get_by_code(code: str, request: Request, user: dict = Depends(role_bas
     )
 
 
-@course_router.put("/")
+@course_router.put("/",
+                   summary="Create a new course",
+                   description="Creates a course with a unique code, evaluation method, and optional materials.",
+                   responses={
+                       201: {
+                           "description": "Course created successfully",
+                       },
+                       400: {"description": "Invalid evaluation formula (does not sum to 100)"},
+                       409: {"description": "Course with the given code already exists"},
+                       401: {"description": "Unauthorized access"},
+                       403: {"description": "Forbidden"},
+                   }, )
 async def create(course: CourseCreateRequest, request: Request, user: dict = Depends(role_based_filter)):
     """
     Create a new course.
@@ -104,7 +123,8 @@ async def create(course: CourseCreateRequest, request: Request, user: dict = Dep
             additional_links={
                 "self": build_links(f"/{course.code}", "self", "View created course", "GET"),
                 "parent": build_links("/", "all_courses", "Retrieve all courses", "GET"),
-                "add_course_materials": build_links(f"/{course.code}/course", "course_materials", "Add course materials", "POST"),
+                "add_course_materials": build_links(f"/{course.code}/course", "course_materials",
+                                                    "Add course materials", "POST"),
                 "add_lab_materials": build_links(f"/{course.code}/lab", "lab_materials", "Add lab materials", "POST"),
             },
             response_code="created",
@@ -115,9 +135,21 @@ async def create(course: CourseCreateRequest, request: Request, user: dict = Dep
         raise ResourceAlreadyExistsException(f"Course with code '{course.code}' already exists.")
 
 
-@course_router.post("/{code}/course")
-async def add_course_materials(code: str, materials: List[Material], request: Request, user: dict = Depends(role_based_filter)):
-
+@course_router.post("/{code}/course",
+                    summary="Add materials to a course",
+                    description="Adds a list of materials to the specified course.",
+                    responses={
+                        200: {
+                            "description": "Materials added successfully",
+                        },
+                        404: {"description": "Course not found"},
+                        416: {"description": "Invalid course code"},
+                        401: {"description": "Unauthorized access"},
+                        403: {"description": "Forbidden"},
+                    },
+                    )
+async def add_course_materials(code: str, materials: List[Material], request: Request,
+                               user: dict = Depends(role_based_filter)):
     for material in materials:
         if 20 < material.number < 1:
             raise InvalidCourseNumberException(f"Course number '{material.number}' is not valid")
@@ -151,9 +183,18 @@ async def add_course_materials(code: str, materials: List[Material], request: Re
     )
 
 
-@course_router.post("/{code}/{course_number}/upload-course")
-async def upload_course_file(code: str, course_number: int, course_file: UploadFile, request: Request, user: dict = Depends(role_based_filter)):
-
+@course_router.post("/{code}/{course_number}/upload-course",
+                    summary="Upload course document file.",
+                    description="Add a file to a specified course.",
+                    responses={
+                        200: {"description": "File uploaded successfully"},
+                        404: {"description": "Course not found"},
+                        413: {"description": "File dimension is too big"},
+                        416: {"description": "Parameter length not exceeded the limits"},
+                        422: {"description": "File extension is not valid"}
+                    })
+async def upload_course_file(code: str, course_number: int, course_file: UploadFile, request: Request,
+                             user: dict = Depends(role_based_filter)):
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
 
@@ -167,7 +208,7 @@ async def upload_course_file(code: str, course_number: int, course_file: UploadF
     content = await course_file.read()  # Read file content to calculate size
     file_size_mb = len(content) / (1024 * 1024)  # Convert to MB
     if file_size_mb > MAX_FILE_SIZE_MB:
-        raise FileNotValidException(f"File dimension '{file_size_mb}' is bigger than {MAX_FILE_SIZE_MB}")
+        raise FileTooBigException(f"File dimension '{file_size_mb}' is bigger than {MAX_FILE_SIZE_MB}")
 
     # file path naming: path-to-course/{code}/courses/course_file
 
@@ -178,7 +219,7 @@ async def upload_course_file(code: str, course_number: int, course_file: UploadF
 
     # this operation changes the original course name with the name of the uploaded file
     # TODO: update course_name in the database
-    course_name, extention = os.path.splitext(course_file.filename)     # dont include file extention
+    course_name, extention = os.path.splitext(course_file.filename)  # dont include file extention
 
     courses = document.get("course", [])
 
@@ -214,9 +255,16 @@ async def upload_course_file(code: str, course_number: int, course_file: UploadF
     )
 
 
-@course_router.post("/{code}/lab")
-async def add_lab_materials(code: str, materials: List[Material], request: Request, user: dict = Depends(role_based_filter)):
-
+@course_router.post("/{code}/lab",
+                    summary="Add lab materials",
+                    description="Add a list of lab materials (files not included)",
+                    responses={
+                        200: {"description": "Materials uploaded successfully"},
+                        404: {"description": "Course not found"},
+                        416: {"description": "Parameter length not exceeded the limits"},
+                    })
+async def add_lab_materials(code: str, materials: List[Material], request: Request,
+                            user: dict = Depends(role_based_filter)):
     for material in materials:
         if 20 < material.number < 1:
             raise InvalidCourseNumberException(f"Course number '{material.number}' is not valid")
@@ -249,12 +297,20 @@ async def add_lab_materials(code: str, materials: List[Material], request: Reque
         returned_value={"modified_count": result.modified_count},
     )
 
+
 # TODO: upload lab file route
 
 
-@course_router.delete("/{code}/{course_number}/course")
-async def remove_course_material(code: str, course_number: int, request: Request, user: dict = Depends(role_based_filter)):
-
+@course_router.delete("/{code}/{course_number}/course",
+                      summary="Delete course materials",
+                      description="Delete course materials from a specified course",
+                      responses={
+                        200: {"description": "Removed successfully"},
+                        404: {"description": "Course not found"},
+                        416: {"description": "Parameter length not exceeded the limits"},
+                      })
+async def remove_course_material(code: str, course_number: int, request: Request,
+                                 user: dict = Depends(role_based_filter)):
     if 20 < course_number < 1:
         raise InvalidCourseNumberException(f"Course number '{course_number}' is not valid")
 
@@ -299,9 +355,15 @@ async def remove_course_material(code: str, course_number: int, request: Request
     )
 
 
-@course_router.delete("/{code}/{lab_number}/lab")
+@course_router.delete("/{code}/{lab_number}/lab",
+                      summary="Delete lab materials",
+                      description="Delete lab materials from a specified lab",
+                      responses={
+                        200: {"description": "Removed successfully"},
+                        404: {"description": "Course not found"},
+                        416: {"description": "Parameter length not exceeded the limits"},
+                      })
 async def remove_lab_material(code: str, lab_number: int, request: Request, user: dict = Depends(role_based_filter)):
-
     if 20 < lab_number < 1:
         raise InvalidCourseNumberException(f"Course number '{lab_number}' is not valid")
 
@@ -347,9 +409,15 @@ async def remove_lab_material(code: str, lab_number: int, request: Request, user
     )
 
 
-@course_router.delete("/{code}")
+@course_router.delete("/{code}",
+                      summary="Delete a class",
+                      description="Delete all data from a class included courses and labs",
+                      responses={
+                        200: {"description": "Course deleted successfully"},
+                        404: {"description": "Course not found"},
+                        416: {"description": "Parameter length not exceeded the limits"},
+                      })
 async def remove_by_code(code: str, request: Request, user: dict = Depends(role_based_filter)):
-
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
 
@@ -376,9 +444,16 @@ async def remove_by_code(code: str, request: Request, user: dict = Depends(role_
     )
 
 
-@course_router.get("/{code}/evaluation")
+@course_router.get("/{code}/evaluation",
+                   summary="Retrieve evaluation formula",
+                   description="Retrieve evaluation formula of a specified class",
+                   response_model=Evaluation,
+                   responses={
+                        200: {"description": "Evaluation retrieved successfully"},
+                        404: {"description": "Course not found"},
+                        416: {"description": "Parameter length not exceeded the limits"},
+                   })
 async def get_evaluation_formula(code: str, request: Request, user: dict = Depends(role_based_filter)):
-
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
 
@@ -406,9 +481,16 @@ async def get_evaluation_formula(code: str, request: Request, user: dict = Depen
     )
 
 
-@course_router.get("/{code}/lab")
+@course_router.get("/{code}/lab",
+                   summary="Retrieve labs",
+                   description="Get all labs from a specified class",
+                   response_model=[Material],
+                   responses={
+                        200: {"description": "Labs retrieved successfully"},
+                        404: {"description": "Course not found"},
+                        416: {"description": "Parameter length not exceeded the limits"},
+                   })
 async def get_labs(code: str, request: Request, user: dict = Depends(role_based_filter)):
-
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
 
@@ -435,9 +517,15 @@ async def get_labs(code: str, request: Request, user: dict = Depends(role_based_
     )
 
 
-@course_router.get("/{code}/course")
+@course_router.get("/{code}/course",
+                   summary="Retrieve courses",
+                   description="Get all courses from a specified class",
+                   response_model=[Material],
+                   responses={
+                        200: {"description": "Courses retrieved successfully"},
+                        404: {"description": "Course not found"},
+                        416: {"description": "Parameter length not exceeded the limits"},})
 async def get_courses(code: str, request: Request, user: dict = Depends(role_based_filter)):
-
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
 
@@ -464,9 +552,17 @@ async def get_courses(code: str, request: Request, user: dict = Depends(role_bas
     )
 
 
-@course_router.post("/{code}/evaluation")
-async def update_evaluation(code: str, evaluation: List[Evaluation], request: Request, user: dict = Depends(role_based_filter)):
-
+@course_router.post("/{code}/evaluation",
+                    summary="Update evaluation",
+                    description="Update evaluation method to a specified course",
+                    responses={
+                        200: {"description": "Evaluation updated successfully"},
+                        404: {"description": "Course not found"},
+                        416: {"description": "Parameter length not exceeded the limits"},
+                        422: {"description": "Formula is unprocessable"},
+                    })
+async def update_evaluation(code: str, evaluation: List[Evaluation], request: Request,
+                            user: dict = Depends(role_based_filter)):
     if not code or len(code) > 20 or code.isspace():
         raise InvalidCourseCodeException(f"Code '{code}' is invalid or out of bounds")
 
@@ -496,9 +592,16 @@ async def update_evaluation(code: str, evaluation: List[Evaluation], request: Re
     )
 
 
-@course_router.get("/{code}/courses/{course_number}")
+@course_router.get("/{code}/courses/{course_number}",
+                   summary="Retrieve course file",
+                   description="Retrieve a file from a specified course",
+                   response_model=FileResponse,
+                   responses={
+                        200: {"description": "File retrieved successfully"},
+                        404: {"description": "Course or file not found"},
+                        416: {"description": "Parameter length not exceeded the limits"},
+                   })
 async def get_course_file(code: str, course_number: int, request: Request, user: dict = Depends(role_based_filter)):
-
     if 20 < course_number < 1:
         raise InvalidCourseNumberException(f"Course number '{course_number}' is not valid")
 
@@ -526,4 +629,3 @@ async def get_course_file(code: str, course_number: int, request: Request, user:
     return FileResponse(file, media_type=mime_type, filename=file.name)
 
 # TODO: get lab file
-
