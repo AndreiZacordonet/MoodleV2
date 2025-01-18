@@ -21,3 +21,8 @@ class MaterialsNotFoundException(Exception):
 class FormulaLogicException(Exception):
     def __init__(self, message: str):
         self.message = message
+
+
+class ResourceAlreadyExistsException(Exception):
+    def __init__(self, message: str):
+        self.message = message
