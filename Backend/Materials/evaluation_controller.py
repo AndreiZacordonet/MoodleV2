@@ -4,7 +4,7 @@ from typing import List, Optional, Set
 
 from bson.json_util import dumps
 
-from fastapi import APIRouter, HTTPException, Body, Query, UploadFile
+from fastapi import APIRouter, HTTPException, Body, Query, UploadFile, Depends
 from fastapi.responses import FileResponse
 
 from pymongo.errors import DuplicateKeyError
@@ -16,11 +16,13 @@ from service import check_formula
 from pathlib import Path
 import os
 
+from web_filter import role_based_filter
+
 course_router = APIRouter()
 
 
 @course_router.get("/")
-async def get_all():
+async def get_all(user: dict = Depends(role_based_filter)):
     # TODO: add pagination
     documents = course_data_collection.find({}, {"_id": 0})
 
@@ -30,7 +32,7 @@ async def get_all():
 
 
 @course_router.get("/{code}")
-async def get_by_code(code: str):
+async def get_by_code(code: str, user: dict = Depends(role_based_filter)):
 
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
     if not document:
@@ -42,7 +44,7 @@ async def get_by_code(code: str):
 
 
 @course_router.put("/")
-async def create(course: CourseCreateRequest):
+async def create(course: CourseCreateRequest, user: dict = Depends(role_based_filter)):
     """
     Create a new course.
     - `code`: Unique course code.
@@ -50,8 +52,8 @@ async def create(course: CourseCreateRequest):
     - `materials`: Optional materials for course and lab files.
     """
 
-    if sum(item.weight for item in course.evaluation) > 100:
-        raise HTTPException(status_code=400, detail="Sum of evaluation weights exceeds 100.")
+    if sum(item.weight for item in course.evaluation) != 100:
+        raise HTTPException(status_code=400, detail="Sum of evaluation weights is incorrect.")
 
     try:
         result = course_data_collection.insert_one(course.serialize_course())
@@ -62,7 +64,7 @@ async def create(course: CourseCreateRequest):
 
 
 @course_router.post("/{code}/course")
-async def add_course_materials(code: str, materials: List[Material]):
+async def add_course_materials(code: str, materials: List[Material], user: dict = Depends(role_based_filter)):
     # TODO: input validation
 
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
@@ -82,7 +84,7 @@ async def add_course_materials(code: str, materials: List[Material]):
 
 
 @course_router.post("/{code}/{course_number}/upload-course")
-async def upload_course_file(code: str, course_number: int, course_file: UploadFile):
+async def upload_course_file(code: str, course_number: int, course_file: UploadFile, user: dict = Depends(role_based_filter)):
     # TODO: input validation
 
     # file path naming: path-to-course/{code}/courses/course_file
@@ -119,9 +121,8 @@ async def upload_course_file(code: str, course_number: int, course_file: UploadF
     return {"message": "File added successfully.", "modified_count": result.modified_count}
 
 
-
 @course_router.post("/{code}/lab")
-async def add_course_materials(code: str, materials: List[Material]):
+async def add_course_materials(code: str, materials: List[Material], user: dict = Depends(role_based_filter)):
     # TODO: input validation
 
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
@@ -139,9 +140,11 @@ async def add_course_materials(code: str, materials: List[Material]):
 
     return {"message": "Field added successfully.", "modified_count": result.modified_count}
 
+# TODO: upload lab file route
+
 
 @course_router.delete("/{code}/course")
-async def remove_material(code: str, material: Material):
+async def remove_material(code: str, material: Material, user: dict = Depends(role_based_filter)):
     ### BIG TODO: every file to have in name "_{code}" where code is course unique code
     ### or maybe stored in a specific folder ###
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
@@ -172,7 +175,7 @@ async def remove_material(code: str, material: Material):
 
 
 @course_router.delete("/{code}/lab")
-async def remove_material(code: str, material: Material):
+async def remove_material(code: str, material: Material, user: dict = Depends(role_based_filter)):
     ### BIG TODO: every file to have in name "_{code}" where code is course unique code
     ### or maybe stored in a specific folder ###
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
@@ -203,7 +206,7 @@ async def remove_material(code: str, material: Material):
 
 
 @course_router.delete("/{code}")
-async def remove_by_code(code: str):
+async def remove_by_code(code: str, user: dict = Depends(role_based_filter)):
     result = course_data_collection.delete_one({"code": code})
 
     if result.deleted_count == 0:
@@ -213,7 +216,7 @@ async def remove_by_code(code: str):
 
 
 @course_router.get("/{code}/evaluation")
-async def get_evaluation_formula(code: str):
+async def get_evaluation_formula(code: str, user: dict = Depends(role_based_filter)):
 
     document = course_data_collection.find_one(
         {"code": code},
@@ -227,7 +230,7 @@ async def get_evaluation_formula(code: str):
 
 
 @course_router.get("/{code}/lab")
-async def get_labs(code: str):
+async def get_labs(code: str, user: dict = Depends(role_based_filter)):
 
     document = course_data_collection.find_one(
         {"code": code},
@@ -241,7 +244,7 @@ async def get_labs(code: str):
 
 
 @course_router.get("/{code}/course")
-async def get_courses(code: str):
+async def get_courses(code: str, user: dict = Depends(role_based_filter)):
 
     document = course_data_collection.find_one(
         {"code": code},
@@ -255,7 +258,7 @@ async def get_courses(code: str):
 
 
 @course_router.post("/{code/evaluation")
-async def update_evaluation(code: str, evaluation: List[Evaluation]):
+async def update_evaluation(code: str, evaluation: List[Evaluation], user: dict = Depends(role_based_filter)):
     # TODO: check the code
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
     if not document:
@@ -272,7 +275,7 @@ async def update_evaluation(code: str, evaluation: List[Evaluation]):
 
 
 @course_router.get("/{code}/courses/{course_number}")
-async def get_course_file(code: str, course_number: str):
+async def get_course_file(code: str, course_number: str, user: dict = Depends(role_based_filter)):
 
     document = course_data_collection.find_one({"code": code}, {"_id": 0})
     if not document:
@@ -293,4 +296,6 @@ async def get_course_file(code: str, course_number: str):
         mime_type = "application/octet-stream"
 
     return FileResponse(file, media_type=mime_type, filename=file.name)
+
+# TODO: get lab file
 

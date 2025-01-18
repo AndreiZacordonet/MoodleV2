@@ -20,7 +20,7 @@ class Material(BaseModel):
     file: str
 
 
-class CourseCreateRequest(BaseModel):
+class Course(BaseModel):
     code: str
     evaluation: List[Evaluation]
     course: Optional[List[Material]] = [
@@ -42,5 +42,16 @@ class CourseCreateRequest(BaseModel):
             "evaluation": [{"type": e.type, "weight": e.weight} for e in self.evaluation],
             "course": [m.model_dump() if isinstance(m, Material) else m for m in self.course],
             "lab": [m.model_dump() if isinstance(m, Material) else m for m in self.lab],
+        }
+
+
+class CourseCreateRequest(BaseModel):
+    code: str
+    evaluation: List[Evaluation]
+
+    def serialize_course(self):
+        return {
+            "code": self.code,
+            "evaluation": [{"type": e.type, "weight": e.weight} for e in self.evaluation]
         }
 
