@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 import grpc
@@ -7,6 +8,15 @@ import idm_pb2_grpc
 
 app = FastAPI()
 
+
+# Configure CORS for hangular
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:4200"],  # Replace with the Angular app's URL
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods (POST, GET, etc.)
+    allow_headers=["*"],  # Allow all headers
+)
 
 class LoginRequest(BaseModel):
     email: str
