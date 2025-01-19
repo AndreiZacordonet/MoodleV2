@@ -1,0 +1,17 @@
+### fastapi client
+INFO:     Will watch for changes in these directories: ['D:\\Materii\\Anul IV\\Semestrul I\\POS\\project-POS\\Backend\\IDM']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [27564] using StatReload
+INFO:     Started server process [27276]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     127.0.0.1:59009 - "POST /login HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59374 - "GET /api/materials/NM/courses/2 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59374 - "GET /api/materials/NM/courses/2 HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59488 - "GET /api/materials/NM/courses/1 HTTP/1.1" 404 Not Found
+
+### grpc server:
+Starting server. Listening on port 50051.
+veificam db
+deschidem db
+User: 3
