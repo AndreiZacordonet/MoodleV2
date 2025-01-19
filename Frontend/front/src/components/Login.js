@@ -24,6 +24,8 @@ const Login = () => {
 
             login()
 
+            localStorage.setItem("email", email);
+
             navigate("/dashboard");
         } catch (error) {
             console.error("Login Failed", error.response?.data || error.message);

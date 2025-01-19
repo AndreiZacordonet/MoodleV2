@@ -17,6 +17,8 @@ const Logout = () => {
 
       localStorage.removeItem("token")
 
+      localStorage.clear()
+
       navigate("/login");
     } catch (error) {
       console.error("Error logging out:", error);
