@@ -1,6 +1,6 @@
 import json
 import mimetypes
-from typing import List, Optional, Set
+from typing import List, Dict
 
 from bson.json_util import dumps
 
@@ -11,13 +11,14 @@ from pymongo.errors import DuplicateKeyError
 
 from database_config import course_data_collection
 from exceptions import *
+from grpc_client import validate_token
 from models import CourseCreateRequest, Material, Evaluation, Course
 from service import check_formula, enhanced_body_build, build_links
 
 from pathlib import Path
 import os
 
-from web_filter import role_based_filter
+from web_filter import role_based_filter, ALLOWED_ROLES
 
 MAX_FILE_SIZE_MB = 25
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".xlsx", ".pptx"}
@@ -28,14 +29,14 @@ course_router = APIRouter()
 @course_router.get("/",
                    summary="Retrieve all courses information.",
                    description="Returns a list of all available courses with their details",
-                   response_model=[Course],
+                   response_model=List[Course],
                    responses={
                        201: {"description": "Course created successfully"},
                        401: {"description": "Unauthorized access"},
                        403: {"description": "Forbidden"},
                    })
 async def get_all(request: Request, user: dict = Depends(role_based_filter)):
-    documents: [Course] = course_data_collection.find({}, {"_id": 0})
+    documents: List[Course] = course_data_collection.find({}, {"_id": 0})
 
     result = json.loads(dumps(documents))
 
@@ -51,7 +52,7 @@ async def get_all(request: Request, user: dict = Depends(role_based_filter)):
     )
 
 
-@course_router.get("/{code}",
+@course_router.get("/class/{code}",
                    summary="Retrieve a specific course by its code",
                    description="Fetch the details of a course using its unique code.",
                    response_model=Course,
@@ -484,7 +485,7 @@ async def get_evaluation_formula(code: str, request: Request, user: dict = Depen
 @course_router.get("/{code}/lab",
                    summary="Retrieve labs",
                    description="Get all labs from a specified class",
-                   response_model=[Material],
+                   response_model=List[Material],
                    responses={
                         200: {"description": "Labs retrieved successfully"},
                         404: {"description": "Course not found"},
@@ -520,7 +521,7 @@ async def get_labs(code: str, request: Request, user: dict = Depends(role_based_
 @course_router.get("/{code}/course",
                    summary="Retrieve courses",
                    description="Get all courses from a specified class",
-                   response_model=[Material],
+                   response_model=List[Material],
                    responses={
                         200: {"description": "Courses retrieved successfully"},
                         404: {"description": "Course not found"},
@@ -595,7 +596,6 @@ async def update_evaluation(code: str, evaluation: List[Evaluation], request: Re
 @course_router.get("/{code}/courses/{course_number}",
                    summary="Retrieve course file",
                    description="Retrieve a file from a specified course",
-                   response_model=FileResponse,
                    responses={
                         200: {"description": "File retrieved successfully"},
                         404: {"description": "Course or file not found"},
@@ -627,5 +627,33 @@ async def get_course_file(code: str, course_number: int, request: Request, user:
         mime_type = "application/octet-stream"
 
     return FileResponse(file, media_type=mime_type, filename=file.name)
+
+
+@course_router.get("/links", response_model=List[Dict[str, str]])
+async def get_allowed_links(request: Request):
+    """
+    Get the list of allowed links for the user based on their role.
+    """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization header missing or malformed")
+
+    token = auth_header.split(" ")[1]
+    try:
+        user_data = validate_token(token)
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid or expired token")
+    except RuntimeError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    user_role = user_data["role"]
+    allowed_links = []
+
+    for (path_pattern, method), roles in ALLOWED_ROLES.items():
+        if user_role in roles:
+            # Add the allowed path and method to the response
+            allowed_links.append({"path": path_pattern.pattern, "method": method})
+
+    return allowed_links
 
 # TODO: get lab file

@@ -4,26 +4,26 @@ from grpc_client import validate_token
 import re
 
 
-# ALLOWED_ROLES = {
-#     ["/api/materials/", "GET"]: ["STUDENT", "PROFESSOR"],   # get all
-#     ["/api/materials/{code}", "GET"]: ["STUDENT", "PROFESSOR"],     # get by code
-#     ["/api/materials/", "PUT"]: ["PROFESSOR"],      # create new
-#     ["/api/materials/{code}", "DELETE"]: ["ADMIN", "PROFESSOR"],    # delete by code
-#     ["/api/materials/{code}/course", "POST"]: ["PROFESSOR"],    # add course materials (not file upload)
-#     ["/api/materials/{code}/{course_number}/upload-course", "POST"]: ["PROFESSOR"],  # add (upload) course file
-#     ["/api/materials/{code}/lab", "POST"]: ["PROFESSOR"],    # add lab materials (not file upload)
-#     ["/api/materials/{code}/course", "DELETE"]: ["PROFESSOR"],   # delete course material
-#     ["/api/materials/{code}/lab", "DELETE"]: ["PROFESSOR"],   # delete lab material
-#     ["/api/materials/{code}/evaluation", "GET"]: ["STUDENT", "PROFESSOR"],   # get evaluation
-#     ["/api/materials/{code}/lab", "GET"]: ["STUDENT", "PROFESSOR"],     # get labs
-#     ["/api/materials/{code}/course", "GET"]: ["STUDENT", "PROFESSOR"],     # get courses
-#     ["/api/materials/{code}/evaluation", "POST"]: ["PROFESSOR"],    # update evaluation
-#     ["/api/materials/{code}/courses/{course_number}", "GET"]: ["STUDENT", "PROFESSOR"],    # get course file
+# ALLOWED_ROLES2 = {
+#     ("/api/materials/", "GET"): ["STUDENT", "PROFESSOR"],   # get all
+#     ("/api/materials/class/{code}", "GET"): ["STUDENT", "PROFESSOR"],     # get by code
+#     ("/api/materials/", "PUT"): ["PROFESSOR"],      # create new
+#     ("/api/materials/{code}", "DELETE"): ["ADMIN", "PROFESSOR"],    # delete by code
+#     ("/api/materials/{code}/course", "POST"): ["PROFESSOR"],    # add course materials (not file upload)
+#     ("/api/materials/{code}/{course_number}/upload-course", "POST"): ["PROFESSOR"],  # add (upload) course file
+#     ("/api/materials/{code}/lab", "POST"): ["PROFESSOR"],    # add lab materials (not file upload)
+#     ("/api/materials/{code}/{course_number}/course", "DELETE"): ["PROFESSOR"],   # delete course material
+#     ("/api/materials/{code}/{course_number}/lab", "DELETE"): ["PROFESSOR"],   # delete lab material
+#     ("/api/materials/{code}/evaluation", "GET"): ["STUDENT", "PROFESSOR"],   # get evaluation
+#     ("/api/materials/{code}/lab", "GET"): ["STUDENT", "PROFESSOR"],     # get labs
+#     ("/api/materials/{code}/course", "GET"): ["STUDENT", "PROFESSOR"],     # get courses
+#     ("/api/materials/{code}/evaluation", "POST"): ["PROFESSOR"],    # update evaluation
+#     ("/api/materials/{code}/courses/{course_number}", "GET"): ["STUDENT", "PROFESSOR"],    # get course file
 # }
 
 ALLOWED_ROLES = {
     (re.compile(r"^/api/materials/$"), "GET"): ["STUDENT", "PROFESSOR"],  # get all
-    (re.compile(r"^/api/materials/[^/]+$"), "GET"): ["STUDENT", "PROFESSOR"],  # get by code
+    (re.compile(r"^/api/materials/class/[^/]+$"), "GET"): ["STUDENT", "PROFESSOR"],  # get by code
     (re.compile(r"^/api/materials/$"), "PUT"): ["PROFESSOR"],  # create new
     (re.compile(r"^/api/materials/[^/]+$"), "DELETE"): ["ADMIN", "PROFESSOR"],  # delete by code
     (re.compile(r"^/api/materials/[^/]+/course$"), "POST"): ["PROFESSOR"],  # add course materials
@@ -36,6 +36,7 @@ ALLOWED_ROLES = {
     (re.compile(r"^/api/materials/[^/]+/course$"), "GET"): ["STUDENT", "PROFESSOR"],  # get courses
     (re.compile(r"^/api/materials/[^/]+/evaluation$"), "POST"): ["PROFESSOR"],  # update evaluation
     (re.compile(r"^/api/materials/[^/]+/courses/\d+$"), "GET"): ["STUDENT", "PROFESSOR"],  # get course file
+    (re.compile(r"^/api/materials/links$"), "GET"): ["STUDENT", "PROFESSOR", "ADMIN"],  # get links
 }
 
 
