@@ -1,0 +1,49 @@
+version: "3.8"
+
+services:
+    idm:
+        build:
+            context: ./IDM
+        ports:
+            - "8000:8000"
+            - "50051:50051"
+        networks:
+            - mynetwork
+        # deploy:
+        #     replicas: 2
+
+    materials:
+        build:
+            context: ./Materials
+        ports:
+            - "8001:8001"
+        depends_on:
+            - idm
+        networks:
+            - mynetwork
+
+    academia:
+        build:
+            context: ./Academia
+        ports:
+            - "8080:8080"
+        depends_on:
+            - idm
+        environment:
+            - SUPABASE_ACADEMIA_DB_URL=${SUPABASE_ACADEMIA_DB_URL}
+        env_file:
+            - ./Academia/.env
+
+    # nginx:
+    #     image: nginx
+    #     ports:
+    #         - "80:80"
+    #     volumes:
+    #         - ./nginx.conf:/etc/nginx/nginx.conf
+    #     depends_on:
+    #         - idm
+    #     networks:
+    #         - mynetwork
+
+networks:
+    mynetwork:
