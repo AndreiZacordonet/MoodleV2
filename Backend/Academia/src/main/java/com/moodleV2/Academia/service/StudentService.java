@@ -130,7 +130,7 @@ public class StudentService {
 
     public static Specification<Student> emailContains(String email) {
         return (root, query, criteriaBuilder) ->
-                email == null ? null : criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), "%" + email.toLowerCase() + "%");
+                email == null ? null : criteriaBuilder.equal(criteriaBuilder.lower(root.get("email")), email.toLowerCase());
     }
 
     public static Specification<Student> cicluEquals(Ciclu ciclu){

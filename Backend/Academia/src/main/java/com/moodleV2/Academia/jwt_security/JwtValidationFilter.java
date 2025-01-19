@@ -80,6 +80,10 @@ public class JwtValidationFilter implements Filter {
         put("discipline/archive/", new HashMap<>() {{
             put("GET", "ADMIN");                    // get all from archive
         }});
+
+        put("/links", new HashMap<>() {{
+            put("GET", "ADMIN; PROFESSOR; STUDENT");
+        }});
     }};
 
     private final GrpcClientService grpcClientService;

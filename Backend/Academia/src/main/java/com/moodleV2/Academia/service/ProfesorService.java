@@ -58,10 +58,10 @@ public class ProfesorService {
         emailValidator(email,
                 () -> new SearchParamException("Professor email search parameter { " + email + " } is not valid."));
 
-        // FIXME: is this validation OK??
-        if (profesorRepository.existsProfesorByEmail(email)) {
-            throw new ResourceAlreadyExistsException("Email { " + email + " } already exists.");
-        }
+//        // FIXME: is this validation OK??
+//        if (profesorRepository.existsProfesorByEmail(email)) {
+//            throw new ResourceAlreadyExistsException("Email { " + email + " } already exists.");
+//        }
         if (codDisciplina != null && (codDisciplina.length() > 20 || codDisciplina.isBlank())) {
             throw new SearchParamException(codDisciplina);
         }
@@ -112,7 +112,7 @@ public class ProfesorService {
 
     public static Specification<Profesor> emailContains(String email) {
         return (root, query, criteriaBuilder) ->
-                email == null ? null : criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), "%" + email.toLowerCase() + "%");
+                email == null ? null : criteriaBuilder.equal(criteriaBuilder.lower(root.get("email")), email.toLowerCase());
     }
 
     public static Specification<Profesor> gradEquals(Grad grad) {
